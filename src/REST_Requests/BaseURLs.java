@@ -35,4 +35,39 @@ public class BaseURLs {
     /* DELETES */
     public static final String delQos = "http://localhost:8080/ovsdb/nb/v2/node/OVS/192.168.57.101:39994/tables/qos/rows/<qosuuid>";
     public static final String delQueue = "http://localhost:8080/ovsdb/nb/v2/node/OVS/192.168.57.101:39994/tables/queue/rows/<queueuuid>";
+    
+    /* Flows replacers */
+    public static String urlFlowReplacer(String baseUrl, String nodeid, String tableid){
+       String ret = baseUrl;
+       /* Replacing fields */
+       ret = ret.replace("<nodeid>", nodeid);
+       ret = ret.replace("<tableid>", tableid);
+       return ret;
+    }
+    public static String urlFlowReplacer(String baseUrl, String nodeid, String tableid, String flowid){
+       String ret = baseUrl;
+       /* Replacing fields */
+       ret = ret.replace("<nodeid>", nodeid);
+       ret = ret.replace("<tableid>", tableid);
+       ret = ret.replace("<flowid>", flowid);
+       return ret;
+    }
+    
+    /* Ovs replacers */
+    public static String urlOvsReplacer(String baseUrl, String ovsid){
+       String ret = baseUrl;
+       ret = ret.replace("<ovsid>", ovsid);   // Replacing fields 
+       return ret;
+    }
+    public static String urlQosReplacer(String baseUrl, String qosuuid){
+       String ret = baseUrl;
+       ret = ret.replace("<qosuuid>", qosuuid);   // Replacing fields 
+       return ret;
+    }
+    public static String urlQReplacer(String baseUrl, String queueuuid){
+       String ret = baseUrl;
+       ret = ret.replace("<queueuuid>", queueuuid);   // Replacing fields 
+       return ret;
+    }
+    
 }
