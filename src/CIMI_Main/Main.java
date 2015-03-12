@@ -6,8 +6,10 @@
 package CIMI_Main;
 
 import REST_Requests.BaseURLs;
+import REST_Requests.MyJson;
 import REST_Requests.MyXML;
 import TopologyManagerImpl.FlowConfig;
+import TopologyManagerImpl.QosConfig;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
@@ -35,14 +37,20 @@ public class Main {
 
     public static void main(String[] args) {
 
-        MyXML.setCredentials("admin", "admin"); // setting credentials to request
+        MyXML.setCredentials("admin", "admin");     // setting credentials to xml request
+        MyJson.setCredentials("admin", "admin");    // setting credentials to json request
         System.out.println("Controller credentials set.");
         /*Getting Topology*/
-        System.out.println("Obtaining network topology...");
+        //System.out.println("Obtaining network topology...");
         //MyXML.sendGet(BaseURLs.getTopo, Constants.topo); // requesting topology to controller
+        //
+        MyJson.sendGet(Constants.node, null);
+        QosConfig qc = new QosConfig(Constants.ovsID);
+        MyJson.sendGet(Constants.port, qc);
+        System.exit(0);
         
         FlowConfig fc = new FlowConfig("openflow:1", 0, 125, 125, "10.0.0.1", "10.0.0.2", "2");
-        fc.setFlowName("LOL");
+        fc.setFlowName("LOL");  //optional
         String url;
         //String url = "http://192.168.57.1:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/15";
         //url = BaseURLs.urlFlowReplacer(BaseURLs.putFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));

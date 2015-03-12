@@ -10,8 +10,8 @@ package CIMI_Main;
  * @author nuno
  */
 public class Constants {
+    
     /* HTTP ERROR CODES */
-
     public static final int OK = 200;
     public static final int CREATED = 201;
     public static final int NO_CONTENT = 204;
@@ -21,6 +21,9 @@ public class Constants {
     public static final int INTERNAL_SERVER_ERROR = 500;
     public static final int BAD_GATEWAY = 502;
     public static final int SERVICE_UNAVAILABLE = 503;
+    
+    public static String ovsID;
+    
     /* GET TYPES XML */
     public static final int topo = 1;
     public static final int table = 2;
@@ -40,7 +43,6 @@ public class Constants {
 
     /* OF13 Logical Ports */
     public static enum OFLogicalPorts {
-
         ALL, CONTROLLER, TABLE, IN_PORT, ANY, LOCAL, NORMAL, FLOOD
     }
 

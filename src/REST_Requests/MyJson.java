@@ -8,15 +8,16 @@ package REST_Requests;
 import CIMI_Main.Constants;
 import CIMI_Main.Main;
 import CIMI_Main.TestODL;
-import static REST_Requests.BaseURLs.urlFlowReplacer;
+import OVS.nwPortInfo;
 import static REST_Requests.BaseURLs.urlOvsReplacer;
 import static REST_Requests.BaseURLs.urlQReplacer;
 import static REST_Requests.BaseURLs.urlQosReplacer;
-import TopologyManagerImpl.FlowConfig;
 import TopologyManagerImpl.QosConfig;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,53 +36,66 @@ public class MyJson {
 
     private static String user = new String();
     private static String password = new String();
-    private static boolean debug = true;
+    private static boolean debug = false;
 
     public static void setCredentials(String username, String pass) {
         user = username;
         password = pass;
     }
 
-    public static void sendGet(String link, int type, QosConfig qc) {
+    public static void sendGet(int type, QosConfig qc) {
 
         URL url;
         HttpURLConnection connection = null;
         String restURL = new String();
+        String out = new String();
+        
+        if (debug) {
+                System.setProperty("http.proxyHost", "localhost");
+                System.setProperty("http.proxyPort", "8888");
+        }
         try {
 
             switch (type) {
                 case 1:
                     // Get queue info
+                    out = "Queue";
                     restURL = urlOvsReplacer(BaseURLs.getQueue, qc.getOvsid());
                     break;
                 case 2:
                     // Get qos info
-                    //urlFlowReplacer(BaseURLs.getTable, nodeid, table id);
+                    out = "QoS";
                     restURL = urlOvsReplacer(BaseURLs.getQos, qc.getOvsid());
                     break;
                 case 3:
                     // Get port info
+                    out = "Port";
                     restURL = urlOvsReplacer(BaseURLs.getPorts, qc.getOvsid());
                     break;
                 case 4:
                     // Get bridge info
+                    out = "Bridge";
                     restURL = urlOvsReplacer(BaseURLs.getBridges, qc.getOvsid());
                     break;
                 case 5:
                     // Get node info
+                    out = "Node";
                     restURL = BaseURLs.getNodes;
                     break;
                 default:
                     System.out.println("Undefined type, nothing will be done with request");
             }
+            if(debug)
+                System.out.println("Send Json GET type:"+out);
             
-            url = new URL(link);
+            url = new URL(restURL);
             // Create authentication string and encode it to Base64
             String authStr = user + ":" + password;
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
 
             // Create Http connection
-            System.out.println("Opening connection...");
+            if(debug)
+                System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
             // Set connection properties
@@ -94,44 +108,56 @@ public class MyJson {
             connection.setDoInput(true);
 
             // Get the response from connection's inputStream
-            InputStream json = connection.getInputStream();
+            InputStream jsonIS = connection.getInputStream();
+
+            BufferedReader streamReader = new BufferedReader(new InputStreamReader(jsonIS, "UTF-8"));
+            StringBuilder responseStrBuilder = new StringBuilder();
+
+            String inputStr;
+            while ((inputStr = streamReader.readLine()) != null) {
+                responseStrBuilder.append(inputStr);
+            }
+            JSONObject json = new JSONObject(responseStrBuilder.toString());
 
             /* READ JSON REQUEST !!!*/
-            
             switch (type) {
                 case 1:
                     // Get queue info
-                    
+                    // not necessary for now
                     break;
                 case 2:
                     // Get qos info
-                    
-
+                    // not necessary for now
                     break;
                 case 3:
                     // Get port info
-                    
+                    nwPortInfo.decodePortInfo(json);
                     break;
                 case 4:
                     // Get bridge info
-                    
+                    // not necessary for now
                     break;
                 case 5:
                     // Get node info
-                    
+                    if(debug)
+                        System.out.println(json.getJSONArray("node").getJSONObject(0).get("id").toString());
+                    Constants.ovsID = json.getJSONArray("node").getJSONObject(0).get("id").toString();
                     break;
                 default:
                     System.out.println("Undefined type, nothing will be done with request");
             }
-            
 
         } catch (MalformedURLException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-        }finally {
+        } catch (JSONException ex) {
+            Logger.getLogger(MyJson.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
             if (connection != null) {
                 connection.disconnect();
+                if(debug)
+                    System.out.println("Connection closed.");
             }
         }
 
@@ -140,12 +166,13 @@ public class MyJson {
     public static boolean sendPost(boolean queue, int type, QosConfig qc) {
 
         JSONObject data;
-        
+
         // Queue or Qos row creation
-        if(queue)
+        if (queue) {
             data = createQueue(qc);
-        else
+        } else {
             data = createQos(qc);
+        }
 
         if (data == null) {
             return false;
@@ -155,7 +182,7 @@ public class MyJson {
         HttpURLConnection connection = null;
         String restURL = new String();
         try {
-            
+
             switch (type) {
                 case 1:
                     // post queue info
@@ -169,7 +196,7 @@ public class MyJson {
                 default:
                     System.out.println("Undefined type, nothing will be done with request");
             }
-            
+
             url = new URL(restURL);
 
             // Create authentication string and encode it to Base64
@@ -283,13 +310,13 @@ public class MyJson {
             if (status != Constants.NO_CONTENT) {
                 return false;
             }
-            if(debug){
-                if(type == 1)
+            if (debug) {
+                if (type == 1) {
                     System.out.println("Queue row deleted with success");
-                else
+                } else {
                     System.out.println("QoS row deleted with success");
+                }
             }
-            
 
         } catch (MalformedURLException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
