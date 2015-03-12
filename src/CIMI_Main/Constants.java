@@ -11,6 +11,7 @@ package CIMI_Main;
  */
 public class Constants {
     /* HTTP ERROR CODES */
+
     public static final int OK = 200;
     public static final int CREATED = 201;
     public static final int NO_CONTENT = 204;
@@ -24,7 +25,13 @@ public class Constants {
     public static final int topo = 1;
     public static final int table = 2;
     public static final int flow = 3;
-    
+
+    /* GET TYPES JSON */
+    public static final int queue = 1;
+    public static final int qos = 2;
+    public static final int port = 3;
+    public static final int bridge = 4;
+    public static final int node = 5;
     /* Ethernet types */
     public static final String ipv4 = "2048";
     public static final String arp = "2054";
@@ -32,8 +39,9 @@ public class Constants {
     public static final String lldp = "35020";
 
     /* OF13 Logical Ports */
-    public static enum OFLogicalPorts{
+    public static enum OFLogicalPorts {
+
         ALL, CONTROLLER, TABLE, IN_PORT, ANY, LOCAL, NORMAL, FLOOD
-    } 
-    
+    }
+
 }

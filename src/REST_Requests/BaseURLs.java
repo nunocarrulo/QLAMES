@@ -33,8 +33,8 @@ public class BaseURLs {
     public static final String postQos = "http://localhost:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/QoS/rows";
     public static final String postQueue = "http://192.168.57.1:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/queue/rows";
     /* DELETES */
-    public static final String delQos = "http://localhost:8080/ovsdb/nb/v2/node/OVS/192.168.57.101:39994/tables/qos/rows/<qosuuid>";
-    public static final String delQueue = "http://localhost:8080/ovsdb/nb/v2/node/OVS/192.168.57.101:39994/tables/queue/rows/<queueuuid>";
+    public static final String delQos = "http://localhost:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/qos/rows/<qosuuid>";
+    public static final String delQueue = "http://localhost:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/queue/rows/<queueuuid>";
     
     /* Flows replacers */
     public static String urlFlowReplacer(String baseUrl, String nodeid, String tableid){

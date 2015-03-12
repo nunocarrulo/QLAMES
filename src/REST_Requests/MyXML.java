@@ -41,18 +41,38 @@ import org.w3c.dom.Element;
 public class MyXML {
     private static String user = new String();
     private static String password = new String();
-    private static boolean debug = false;
+    private static boolean debug = true;
     
     public static void setCredentials(String username, String pass){
         user = username;
         password = pass;
     }
-    public static void sendGet(String link, int type){
+    public static void sendGet(int type, FlowConfig fc){
         
         URL url;
         HttpURLConnection connection = null;
+        String restURL = new String();
         try {
-            url = new URL(link);
+            
+            switch(type){
+                case 1:
+                    // Get topology restUrl
+                    restURL = urlFlowReplacer(BaseURLs.getTopo, fc.getNodeID(), Integer.toString(fc.getTableID()));
+                    break;
+                case 2:
+                    // Get table restUrl
+                    restURL = urlFlowReplacer(BaseURLs.getTable, fc.getNodeID(), Integer.toString(fc.getTableID()));
+                    
+                    break;
+                case 3:
+                    // Get flow restUrl
+                    restURL = urlFlowReplacer(BaseURLs.getFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
+                    break;
+                default:
+                    System.out.println("Undefined type, nothing will be done with request");
+            }
+            
+            url = new URL(restURL);
             // Create authentication string and encode it to Base64
             String authStr = user + ":" + password;
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
@@ -89,12 +109,12 @@ public class MyXML {
                     break;
                 case 2:
                     // Get table info
-                    //urlFlowReplacer(BaseURLs.getTable, nodeid, table id);
+                    //readTable();
                     
                     break;
                 case 3:
                     // Get flow info
-                    //urlFlowReplacer(BaseURLs.getTable, nodeid, table id, flowid);
+                    //readFlow();
                     break;
                 default:
                     System.out.println("Undefined type, nothing will be done with request");
@@ -125,9 +145,11 @@ public class MyXML {
         StringBuilder result = new StringBuilder();
         URL url;
         HttpURLConnection connection = null;
+        String restURL = new String();
 
         try {
-            url = new URL(rcvUrl);
+            restURL = BaseURLs.urlFlowReplacer(BaseURLs.putFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
+            url = new URL(restURL);
 
             // Create authentication string and encode it to Base64
             String authStr = user + ":" + password;
@@ -261,7 +283,8 @@ public class MyXML {
     }
     
     public static Document createFlow(boolean useQueue, FlowConfig fc) {
-
+        System.out.println("Creating Flow with id= "+fc.getFlowID());
+        
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();

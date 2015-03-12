@@ -10,7 +10,7 @@ package TopologyManagerImpl;
  * @author nuno
  */
 public class FlowConfig {
- 
+
     private String nodeID;
     private String flowName;
     private int flowPrio;
@@ -23,34 +23,37 @@ public class FlowConfig {
     private String queueUUID;
     private String srcIP;
     private String dstIP;
-    
-    public FlowConfig(){
-        
+
+    public FlowConfig() {
+
     }
-    
-    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort){
+
+    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort) {
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
         this.flowPrio = flowPrio;
-        this.srcIP = srcIP;
-        this.dstIP=dstIP;
-        
+        this.srcIP = srcIP + "/32";
+        this.dstIP = dstIP + "/32";
+        this.outputPort = outputPort;
+
         hardTimeout = idleTimeout = 0;
     }
-    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort, String queueUUID){
+
+    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort, String queueUUID) {
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
         this.flowPrio = flowPrio;
-        this.srcIP = srcIP;
-        this.dstIP=dstIP;
+        this.srcIP = srcIP + "/32";
+        this.dstIP = dstIP + "/32";
         this.queueUUID = queueUUID;
-        
+        this.outputPort = outputPort;
+
         hardTimeout = idleTimeout = 0;
     }
     /* Setter and Getters */
-    
+
     public String getNodeID() {
         return nodeID;
     }
@@ -58,7 +61,7 @@ public class FlowConfig {
     public void setNodeID(String nodeID) {
         this.nodeID = nodeID;
     }
-    
+
     public String getFlowName() {
         return flowName;
     }
@@ -128,7 +131,8 @@ public class FlowConfig {
     }
 
     public void setSrcIP(String srcIP) {
-        this.srcIP = srcIP;
+        this.srcIP = srcIP + "/32";
+
     }
 
     public String getDstIP() {
@@ -136,8 +140,7 @@ public class FlowConfig {
     }
 
     public void setDstIP(String dstIP) {
-        this.dstIP = dstIP;
+        this.dstIP = dstIP + "/32";
     }
-    
-    
+
 }

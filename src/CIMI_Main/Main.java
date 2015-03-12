@@ -39,12 +39,15 @@ public class Main {
         System.out.println("Controller credentials set.");
         /*Getting Topology*/
         System.out.println("Obtaining network topology...");
-        MyXML.sendGet(BaseURLs.getTopo, Constants.topo); // requesting topology to controller
+        //MyXML.sendGet(BaseURLs.getTopo, Constants.topo); // requesting topology to controller
         
-        FlowConfig fc = new FlowConfig();
-        
-        String url = "http://192.168.57.1:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/15";
-        MyXML.sendPut(url, fc);
+        FlowConfig fc = new FlowConfig("openflow:1", 0, 125, 125, "10.0.0.1", "10.0.0.2", "2");
+        fc.setFlowName("LOL");
+        String url;
+        //String url = "http://192.168.57.1:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/15";
+        //url = BaseURLs.urlFlowReplacer(BaseURLs.putFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
+        //MyXML.sendPut(url, fc);
+        url = BaseURLs.urlFlowReplacer(BaseURLs.delFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
         MyXML.sendDelete(Constants.flow, fc);
         //String link = "http://192.168.57.1:8181/restconf/operational/network-topology:network-topology/topology/flow:1/";
 
