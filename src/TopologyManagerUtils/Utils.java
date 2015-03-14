@@ -10,7 +10,10 @@ import TopologyManagerImpl.Port;
 import TopologyManagerImpl.TopoNode;
 import TopologyManagerImpl.Topology;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -21,23 +24,25 @@ import org.w3c.dom.NodeList;
  * @author nuno
  */
 public class Utils {
-    
+
     private static String[] swPorts;
     public static Topology topo = new Topology();
-    private static final boolean debug = true;
+    public static final boolean debug = true;
+
 
     public static void decodeTopology(Document doc) {
-        
+
         System.out.println("Decoding Topology...");
-        
+
         TopoNode topoNode;
-        
+
         /* Retrieving topology (switches and hosts) */
         NodeList nodes = doc.getElementsByTagName("node");
-        
-        if(debug)
+
+        if (debug) {
             System.out.println("Network Nodes:");
-        
+        }
+
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
             if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -46,27 +51,27 @@ public class Utils {
                     // Retrieving switch ID
                     String node_id = e.getElementsByTagName("node-id").item(0).getTextContent();
                     System.out.println("\t" + node_id);
-                    
+
                     /* Reading termination ports of node and Creating node */
                     topoNode = new TopoNode();
                     topoNode.setNode(node_id, readTermPoints(e));
-                    
+
                     // if node is a host insert ip and mac
-                    if(node_id.contains("host:")){
+                    if (node_id.contains("host:")) {
                         //retrieve ip
                         Node addr = e.getElementsByTagName("addresses").item(0);
                         Element addrElem = (Element) addr;
                         String hostIP = addrElem.getElementsByTagName("ip").item(0).getTextContent();
-                        
+
                         //retrieve mac
                         String hostMAC = addrElem.getElementsByTagName("mac").item(0).getTextContent();
                         //set node ip and mac info
                         topoNode.setIPAndMac(hostIP, hostMAC);
                     }
-                     
+
                     // Adding node to topology
                     topo.addNode(topoNode);
-                    
+
                 }
             }
         }
@@ -77,14 +82,45 @@ public class Utils {
         System.out.println("Done decoding topology...");
     }
 
+    public static void decodePortInfo(JSONObject portJson) throws JSONException {
+
+        Iterator it = portJson.getJSONObject("rows").keys();
+        String sw, port, puuid;
+        String[] swPort;
+        
+        /* Get every port uuid and save it on portInfo data structure */
+        while (it.hasNext()) {
+            puuid = it.next().toString();    // get port uuid
+            swPort = portJson.getJSONObject("rows").getJSONObject(puuid).get("name").toString().split("-");
+
+            //if it is a switch pass to next uuid
+            if (swPort.length < 2)
+                continue;
+            
+            sw = "openflow:".concat((swPort[0].substring(1)));
+            port = sw.concat(":").concat(swPort[1].substring(3));
+            System.out.println("Sw: " + sw + " | Port: " + port + " | PortUUID: " + puuid);
+            /* Saving portUUIDs into topo data structure*/
+            if(topo.nodeExists(sw))
+                if(topo.getNode(sw).getPort(port) != null)
+                    topo.getNode(sw).getPort(port).setPortUUID(puuid);
+                else
+                   System.out.println("Port "+port+" does not exist!"); 
+            else
+                System.out.println("Node "+sw+" does not exist!");
+            
+        }
+
+    }
+
     private static List<Port> readTermPoints(Element e) {
         // Retrieving switch ports
         NodeList tpList = e.getElementsByTagName("termination-point");
         int portCounter = -1;
         Port port;
-        
+
         List<Port> portList = new ArrayList<Port>();
-        
+
         swPorts = new String[tpList.getLength()];
         for (int j = 0; j < tpList.getLength(); j++) {
             Node tp = tpList.item(j);
@@ -95,10 +131,11 @@ public class Utils {
                     //if is not local port add else ignore
                     if (!tpElem.getElementsByTagName("tp-id").item(0).getTextContent().contains(":LOCAL")) {
                         swPorts[++portCounter] = tpElem.getElementsByTagName("tp-id").item(0).getTextContent();
-                        
-                        if(debug)
+
+                        if (debug) {
                             System.out.printf("\t\t%s\n", swPorts[portCounter]);
-                        
+                        }
+
                         /* Add ports to the list */
                         port = new Port();
                         port.setPort(swPorts[portCounter]);
@@ -109,15 +146,16 @@ public class Utils {
         }
         return portList;
     }
-    private static void readNodeLinks(Document doc){
-        if(debug){
+
+    private static void readNodeLinks(Document doc) {
+        if (debug) {
             System.out.println("Network Links:");
             System.out.println("\t          Node \t\t\t      TP  ");
         }
-        
+
         NodeList links = doc.getElementsByTagName("link");
         NodeCon nCon;
-        
+
         for (int i = 0; i < links.getLength(); i++) {
             Node link = links.item(i);
             if (link.getNodeType() == Node.ELEMENT_NODE) {
@@ -128,16 +166,17 @@ public class Utils {
                     Element srcElem = (Element) src;
                     String srcTp = srcElem.getElementsByTagName("source-tp").item(0).getTextContent();
                     String srcNode = srcElem.getElementsByTagName("source-node").item(0).getTextContent();
-                    if(debug)
+                    if (debug) {
                         System.out.println("\tSource: " + srcNode + "\t\t" + srcTp);
-                    
+                    }
+
                     // Retrieving destination information
                     Node dst = e.getElementsByTagName("destination").item(0);
                     Element dstElem = (Element) dst;
                     String dstTp = dstElem.getElementsByTagName("dest-tp").item(0).getTextContent();
                     String dstNode = dstElem.getElementsByTagName("dest-node").item(0).getTextContent();
-                    
-                    if(debug){
+
+                    if (debug) {
                         System.out.println("\tDestin: " + dstNode + "\t\t" + dstTp);
                         System.out.println();
                     }
@@ -145,7 +184,7 @@ public class Utils {
                     nCon = new NodeCon();
                     nCon.setConnection(srcNode, srcTp, dstTp);  // create node connection
                     topo.getNode(srcNode).addNodeCon(nCon);     // get source node and add connection to it
-                    
+
                 }
             }
         }

@@ -5,7 +5,6 @@
  */
 package REST_Requests;
 
-import CIMI_Main.Constants;
 import TopologyManagerUtils.Utils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +56,7 @@ public class MyXML {
             switch(type){
                 case 1:
                     // Get topology restUrl
-                    restURL = urlFlowReplacer(BaseURLs.getTopo, fc.getNodeID(), Integer.toString(fc.getTableID()));
+                    restURL = BaseURLs.getTopo;
                     break;
                 case 2:
                     // Get table restUrl

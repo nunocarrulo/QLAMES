@@ -14,8 +14,20 @@ import ITopologyManager.IPort;
 public class Port implements IPort{
 
     private String portID;
+    private String portOvsUUID;
+    //private List<Queue> queues;
     private long bwCap;
     private long currBwLoad;
+
+    @Override
+    public String getPortUUID() {
+        return portOvsUUID;
+    }
+
+    @Override
+    public void setPortUUID(String portOvsUUID) {
+        this.portOvsUUID = portOvsUUID;
+    }
     
     @Override
     public void setPort(String portid) {

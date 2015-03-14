@@ -5,8 +5,6 @@
  */
 package ITopologyManager;
 
-import TopologyManagerImpl.Port;
-
 /**
  *
  * @author nuno
@@ -41,5 +39,14 @@ public interface IPort {
      * @return Returns current bandwidth reserved on port
      */
     public long getCurrLoad();
-
+    /**
+     * 
+     * @param portUUID Unique ovsdb port identifier
+     */
+    public void setPortUUID(String portUUID);
+    /**
+     * 
+     * @return ovsdb port uuid
+     */
+    public String getPortUUID();
 }

@@ -6,6 +6,7 @@
 package TopologyManagerImpl;
 
 import ITopologyManager.ITopoNode;
+import TopologyManagerUtils.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,6 +77,19 @@ public class TopoNode implements ITopoNode {
 
         return ret;
     }
+    
+    @Override
+    public Port getPort(String portID) {
+        for(Port port : ports){
+            if(port.getPortID().equals(portID))
+                return port;
+        }
+        if(Utils.debug)
+            System.out.println("Port not found!");
+        return null;
+        
+    }
+    
     /* Setter and Getters */
 
     public String getId() {
@@ -94,14 +108,10 @@ public class TopoNode implements ITopoNode {
         this.nodeCons = nodeCon;
     }
 
-    public List<Port> getPort() {
+    public List<Port> getAllPorts() {
         return ports;
     }
-
-    public void setPort(List<Port> port) {
-        this.ports = port;
-    }
-
+    
     public boolean isIsHost() {
         return isHost;
     }

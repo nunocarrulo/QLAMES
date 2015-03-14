@@ -12,8 +12,23 @@ import ITopologyManager.INodeCon;
  * @author nuno
  */
 public class NodeCon implements INodeCon{
+    
+    /**
+     * nodeID of the destination node
+     * @serialField dstNodeId
+     */
     private String dstNodeId;
-    private String from, to;
+    /**
+     * PortID of the source node
+     * @serialField from
+     */
+    private String from;
+    
+    /**
+     * PortID of the destination node
+     * @serialField to
+     */
+    private String to;
     
     @Override
     public void setConnection(String nodeId, String from, String to) {

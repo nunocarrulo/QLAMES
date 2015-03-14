@@ -36,5 +36,11 @@ public interface ITopoNode {
      * @param mac MAC address of host
      */
     public void setIPAndMac(String ip, String mac);
+    /**
+     * Retrieves the port object given its ID
+     * @param portID Unique port identifier
+     * @return the port object with the specified ID
+     */
+    public Port getPort(String portID);
     
 }

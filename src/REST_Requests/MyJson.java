@@ -5,14 +5,13 @@
  */
 package REST_Requests;
 
-import CIMI_Main.Constants;
 import CIMI_Main.Main;
 import CIMI_Main.TestODL;
-import OVS.nwPortInfo;
 import static REST_Requests.BaseURLs.urlOvsReplacer;
 import static REST_Requests.BaseURLs.urlQReplacer;
 import static REST_Requests.BaseURLs.urlQosReplacer;
 import TopologyManagerImpl.QosConfig;
+import TopologyManagerUtils.Utils;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -131,7 +130,7 @@ public class MyJson {
                     break;
                 case 3:
                     // Get port info
-                    nwPortInfo.decodePortInfo(json);
+                    Utils.decodePortInfo(json);
                     break;
                 case 4:
                     // Get bridge info
