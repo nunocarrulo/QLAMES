@@ -87,7 +87,8 @@ public class Utils {
         Iterator it = portJson.getJSONObject("rows").keys();
         String sw, port, puuid;
         String[] swPort;
-        
+        if(debug)
+            System.out.println("-------------------------------Decoding Port UUID-------------------------------");
         /* Get every port uuid and save it on portInfo data structure */
         while (it.hasNext()) {
             puuid = it.next().toString();    // get port uuid
@@ -99,7 +100,8 @@ public class Utils {
             
             sw = "openflow:".concat((swPort[0].substring(1)));
             port = sw.concat(":").concat(swPort[1].substring(3));
-            System.out.println("Sw: " + sw + " | Port: " + port + " | PortUUID: " + puuid);
+            if(debug)
+                System.out.println("| Sw: " + sw + " | Port: " + port + " | PortUUID: " + puuid+ " |");
             /* Saving portUUIDs into topo data structure*/
             if(topo.nodeExists(sw))
                 if(topo.getNode(sw).getPort(port) != null)
@@ -110,6 +112,8 @@ public class Utils {
                 System.out.println("Node "+sw+" does not exist!");
             
         }
+        if(debug)
+            System.out.println("--------------------------------------------------------------------------------");
 
     }
 

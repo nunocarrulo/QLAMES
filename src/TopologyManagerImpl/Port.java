@@ -6,6 +6,8 @@
 package TopologyManagerImpl;
 
 import ITopologyManager.IPort;
+import OVS.Queue;
+import java.util.List;
 
 /**
  *
@@ -14,19 +16,64 @@ import ITopologyManager.IPort;
 public class Port implements IPort{
 
     private String portID;
-    private String portOvsUUID;
-    //private List<Queue> queues;
+    private String portUUID;
+    private String qosUUID;
+    private List<Queue> queues;
     private long bwCap;
     private long currBwLoad;
 
     @Override
-    public String getPortUUID() {
-        return portOvsUUID;
+    public boolean addQueue(Queue q) {
+        if(!queues.contains(q)){
+            queues.add(q);
+            return true; 
+        }
+        else{
+            System.out.println("Queue already exists on this port.");
+            return false;
+        }
+            
     }
 
     @Override
-    public void setPortUUID(String portOvsUUID) {
-        this.portOvsUUID = portOvsUUID;
+    public boolean delQueue(String qUUID) {
+
+        for(Queue q : queues){
+            if(q.getUuid().equals(qUUID)){
+               queues.remove(q);
+               System.out.println("Queue: "+qUUID+" removed successfully");
+               return true;
+            }
+        }
+        System.out.println("Queue: "+qUUID+" not found in Port: "+portID);
+        return false;
+       
+    }
+    /*
+    @Override
+    public boolean addQos(String qos) {
+        if(qosUUID.isEmpty()){
+            qosUUID = qos;
+            return true;
+        }else{
+            System.out.println("QoS row already exists.");
+            return false;
+        }
+    }
+
+    @Override
+    public void delQos() {
+        qosUUID = "";
+    }
+    */
+    @Override
+    public String getPortUUID() {
+        return portUUID;
+    }
+
+    @Override
+    public void setPortUUID(String portUUID) {
+        this.portUUID = portUUID;
     }
     
     @Override
@@ -57,7 +104,7 @@ public class Port implements IPort{
         return currBwLoad;
     }
 
-    /* Getters */
+    /* Setters and Getters */
     public String getPortID() {
         return portID;
     }
@@ -65,8 +112,16 @@ public class Port implements IPort{
     public long getBwCap() {
         return bwCap;
     }
+    public String getQosUUID() {
+        return qosUUID;
+    }
+
+    public void setQosUUID(String QosUUID) {
+        this.qosUUID = QosUUID;
+    }
 
     public long getCurrBwLoad() {
         return currBwLoad;
     }
+
 }

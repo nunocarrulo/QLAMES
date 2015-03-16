@@ -40,12 +40,13 @@ import org.w3c.dom.Element;
 public class MyXML {
     private static String user = new String();
     private static String password = new String();
-    private static boolean debug = true;
+    private static boolean debug = false;
     
     public static void setCredentials(String username, String pass){
         user = username;
         password = pass;
     }
+    
     public static void sendGet(int type, FlowConfig fc){
         
         URL url;
@@ -134,9 +135,9 @@ public class MyXML {
         
     }
     
-    public static boolean sendPut(String rcvUrl, FlowConfig fc) {
+    public static boolean sendPut(boolean Q, boolean arp, FlowConfig fc) {
 
-        Document xmlDoc = createFlow(false, fc);
+        Document xmlDoc = createFlow(Q, arp, fc);
 
         if (xmlDoc == null)
             return false;
@@ -176,7 +177,7 @@ public class MyXML {
             //normalize document
             xmlDoc.getDocumentElement().normalize();
 
-            if (true) 
+            if (debug) 
                 System.out.println(getStringFromDoc(xmlDoc));
 
             // Set data to send and close channel
@@ -186,7 +187,7 @@ public class MyXML {
             os.close();
 
             if (debug)
-                System.out.println("Request Send. \nWaiting for response...");
+                System.out.println("Request Sent. \nWaiting for response...");
             
             // Get the response code
             InputStream xml = connection.getInputStream();
@@ -281,7 +282,7 @@ public class MyXML {
         return true;
     }
     
-    public static Document createFlow(boolean useQueue, FlowConfig fc) {
+    public static Document createFlow(boolean useQueue, boolean arp, FlowConfig fc) {
         System.out.println("Creating Flow with id= "+fc.getFlowID());
         
         try {
@@ -327,14 +328,22 @@ public class MyXML {
             Element ethernetType = doc.createElement("ethernet-type");
             ethernetMatch.appendChild(ethernetType);
             Element type = doc.createElement("type");
-            type.appendChild(doc.createTextNode(Constants.ipv4));
+            
+            if(arp)
+                type.appendChild(doc.createTextNode(Constants.arp));   // ARP
+            else 
+                type.appendChild(doc.createTextNode(Constants.ipv4));   // IPv4
             ethernetType.appendChild(type);
-            Element srcIP = doc.createElement("ipv4-source");
-            srcIP.appendChild(doc.createTextNode(fc.getSrcIP()));
-            match.appendChild(srcIP);
-            Element dstIP = doc.createElement("ipv4-destination");
-            dstIP.appendChild(doc.createTextNode(fc.getDstIP()));
-            match.appendChild(dstIP);
+            
+            //include src and dst IP if not ARP packet
+            if(!arp){
+                Element srcIP = doc.createElement("ipv4-source");
+                srcIP.appendChild(doc.createTextNode(fc.getSrcIP()));
+                match.appendChild(srcIP);
+                Element dstIP = doc.createElement("ipv4-destination");
+                dstIP.appendChild(doc.createTextNode(fc.getDstIP()));
+                match.appendChild(dstIP);
+            }
             
             /* INSTRUCTIONS */
             Element instructs = doc.createElement("instructions");

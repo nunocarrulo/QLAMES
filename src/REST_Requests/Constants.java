@@ -10,7 +10,7 @@ package REST_Requests;
  * @author nuno
  */
 public class Constants {
-    
+    /* Pass it to enum later*/
     /* HTTP ERROR CODES */
     public static final int OK = 200;
     public static final int CREATED = 201;

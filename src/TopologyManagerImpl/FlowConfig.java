@@ -52,6 +52,28 @@ public class FlowConfig {
 
         hardTimeout = idleTimeout = 0;
     }
+    
+    
+    public void setFlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort) {
+        this.nodeID = nodeid;
+        this.tableID = tableID;
+        this.flowID = flowID;
+        this.flowPrio = flowPrio;
+        this.outputPort = outputPort;
+
+        // Concat mask if not empty
+        if(!srcIP.isEmpty())
+            this.srcIP = srcIP + "/32";
+        else
+            this.srcIP="";
+        if(!dstIP.isEmpty())
+            this.dstIP = dstIP + "/32";
+        else
+            this.dstIP="";
+        
+        hardTimeout = idleTimeout = 0;
+    }
+    
     /* Setter and Getters */
 
     public String getNodeID() {

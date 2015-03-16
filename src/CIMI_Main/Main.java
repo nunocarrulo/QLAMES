@@ -13,18 +13,6 @@ import TopologyManagerImpl.FlowConfig;
 import TopologyManagerImpl.QosConfig;
 import TopologyManagerImpl.TopoNode;
 import TopologyManagerUtils.Utils;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 /**
  *
@@ -39,23 +27,37 @@ public class Main {
     static boolean debug = false;
 
     public static void main(String[] args) {
-        FlowConfig fc;
-        QosConfig qc;
+        /* Variables and Data structures initialization */
+        FlowConfig fc = new FlowConfig();
+        QosConfig qc = new QosConfig();
         
-        MyXML.setCredentials("admin", "admin");     // setting credentials to xml request
-        MyJson.setCredentials("admin", "admin");    // setting credentials to json request
+        /* Credentials set to Rest requests */
+        MyXML.setCredentials("admin", "admin");     // xml
+        MyJson.setCredentials("admin", "admin");    // json
         System.out.println("Controller credentials set.");
         
-        /*Getting Topology*/
+        /* Getting Topology */
         System.out.println("Obtaining network topology...");
         MyXML.sendGet(Constants.topo, null); // requesting topology to controller
         
-        //Getting ovs node id info
-        MyJson.sendGet(Constants.node, null);
-        //Getting ovs port uuid info
-        qc = new QosConfig(Constants.ovsID);
-        MyJson.sendGet(Constants.port, qc);
+        /* Installing ARP flows */
+        if(debug)
+            System.out.println("Installing ARP flow in all switches!");
+        for(TopoNode tn : Utils.topo.getAllNodes()){
+            if(tn.isIsHost())
+                continue;
+            
+            fc.setFlowConfig(tn.getId(), 0, 4, 4, "", "", Constants.OFLogicalPorts.ALL.name());
+            MyXML.sendPut(false, true, fc);
+            //removeARPFromAll();
+        }
         
+        /* Getting ovs node id info */
+        MyJson.sendGet(Constants.node, null);
+        /* Getting ovs port uuid info */
+        qc.setOvsid(Constants.ovsID);
+        MyJson.sendGet(Constants.port, qc);
+        checkPortUUID();
         System.exit(0);
         
         fc = new FlowConfig("openflow:1", 0, 125, 125, "10.0.0.1", "10.0.0.2", "2");
@@ -71,6 +73,17 @@ public class Main {
 
     }
 
+    public static void removeARPFromAll(){
+        FlowConfig fc = new FlowConfig();
+        
+        for(TopoNode tn : Utils.topo.getAllNodes()){
+            if(tn.isIsHost())
+                continue;
+            fc.setFlowConfig(tn.getId(), 0, 4, 4, "", "", Constants.OFLogicalPorts.ALL.name());
+            MyXML.sendDelete(Constants.flow, fc);
+        }
+    }
+    
     public static void checkPortUUID(){
         System.out.println("--------------------Printing Port ID and UUID------------------------");
         
