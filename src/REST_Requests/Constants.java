@@ -35,6 +35,8 @@ public class Constants {
     public static final int port = 3;
     public static final int bridge = 4;
     public static final int node = 5;
+    public static final int linkSpeed = 6;
+    
     /* Ethernet types */
     public static final String ipv4 = "2048";
     public static final String arp = "2054";

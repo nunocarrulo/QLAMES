@@ -59,13 +59,15 @@ public class BaseURLs {
        ret = ret.replace("<ovsid>", ovsid);   // Replacing fields 
        return ret;
     }
-    public static String urlQosReplacer(String baseUrl, String qosuuid){
+    public static String urlQosReplacer(String baseUrl, String ovsid, String qosuuid){
        String ret = baseUrl;
+       ret = ret.replace("<ovsid>", ovsid);   // Replacing fields 
        ret = ret.replace("<qosuuid>", qosuuid);   // Replacing fields 
        return ret;
     }
-    public static String urlQReplacer(String baseUrl, String queueuuid){
+    public static String urlQReplacer(String baseUrl, String ovsid, String queueuuid){
        String ret = baseUrl;
+       ret = ret.replace("<ovsid>", ovsid);   // Replacing fields 
        ret = ret.replace("<queueuuid>", queueuuid);   // Replacing fields 
        return ret;
     }

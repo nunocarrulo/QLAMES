@@ -28,7 +28,7 @@ public class Utils {
     private static String[] swPorts;
     public static Topology topo = new Topology();
     public static final boolean debug = true;
-
+    public static String qosUUID;
 
     public static void decodeTopology(Document doc) {
 
@@ -117,6 +117,13 @@ public class Utils {
 
     }
 
+    public static void setQosUUID(String rcvQosUuid){
+        if(debug)
+            System.out.println(rcvQosUuid);
+
+        qosUUID = rcvQosUuid;
+    }
+    
     private static List<Port> readTermPoints(Element e) {
         // Retrieving switch ports
         NodeList tpList = e.getElementsByTagName("termination-point");

@@ -48,10 +48,10 @@ public class MyJson {
         HttpURLConnection connection = null;
         String restURL = new String();
         String out = new String();
-        
+
         if (debug) {
-                System.setProperty("http.proxyHost", "localhost");
-                System.setProperty("http.proxyPort", "8888");
+            System.setProperty("http.proxyHost", "localhost");
+            System.setProperty("http.proxyPort", "8888");
         }
         try {
 
@@ -84,17 +84,19 @@ public class MyJson {
                 default:
                     System.out.println("Undefined type, nothing will be done with request");
             }
-            if(debug)
-                System.out.println("Send Json GET type:"+out);
-            
+            if (debug) {
+                System.out.println("Send Json GET type:" + out);
+            }
+
             url = new URL(restURL);
             // Create authentication string and encode it to Base64
             String authStr = user + ":" + password;
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
 
             // Create Http connection
-            if(debug)
+            if (debug) {
                 System.out.println("Opening connection...");
+            }
             connection = (HttpURLConnection) url.openConnection();
 
             // Set connection properties
@@ -138,8 +140,9 @@ public class MyJson {
                     break;
                 case 5:
                     // Get node info
-                    if(debug)
+                    if (debug) {
                         System.out.println(json.getJSONArray("node").getJSONObject(0).get("id").toString());
+                    }
                     Constants.ovsID = json.getJSONArray("node").getJSONObject(0).get("id").toString();
                     break;
                 default:
@@ -155,8 +158,9 @@ public class MyJson {
         } finally {
             if (connection != null) {
                 connection.disconnect();
-                if(debug)
+                if (debug) {
                     System.out.println("Connection closed.");
+                }
             }
         }
 
@@ -221,22 +225,22 @@ public class MyJson {
             connection.setDoOutput(true);
             System.out.println("Setting connection properties and data...");
 
-            if (true) {
-                System.out.println(data.toString());
+            if (debug) {
+                System.out.println("Request: " + data.toString());
             }
 
-            // Set data to send and close channel
-            DataOutputStream os = new DataOutputStream(connection.getOutputStream());
-            os.writeBytes(data.toString());
-            os.flush();
-            os.close();
+            try ( // Set data to send and close channel
+                    DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
+                os.writeBytes(data.toString());
+                os.flush();
+            }
 
             if (debug) {
                 System.out.println("Request Send. \nWaiting for response...");
             }
 
             // Get the response code
-            InputStream json = connection.getInputStream();
+            InputStream jsonIS = connection.getInputStream();
 
             int status = connection.getResponseCode();
             if (debug) {
@@ -244,12 +248,29 @@ public class MyJson {
             }
 
             if (status != Constants.CREATED) {
+                if (queue) {
+                    System.out.println("Error creating Queue row. Status: " + status);
+                } else {
+                    System.out.println("Error creating QoS row. Status: " + status);
+                }
                 return false;
             }
+            /* READ UUID */
+            BufferedReader streamReader = new BufferedReader(new InputStreamReader(jsonIS, "UTF-8"));
+            StringBuilder responseStrBuilder = new StringBuilder();
 
-            //READ UUID
+            String inputStr;
+            while ((inputStr = streamReader.readLine()) != null) {
+                responseStrBuilder.append(inputStr);
+            }
+            if (debug) {
+                System.out.println(responseStrBuilder.toString());
+            }
+            //saving in a temp static var to be stored on topo data structure
+            Utils.setQosUUID(responseStrBuilder.toString());
+
         } catch (Exception e) {
-            System.out.println("Exception " + e);
+            System.out.println("LOLException " + e);
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -260,7 +281,7 @@ public class MyJson {
         return true;
     }
 
-    public static boolean sendDelete(int type) {
+    public static boolean sendDelete(int type, QosConfig qc) {
 
         URL url;
         HttpURLConnection connection = null;
@@ -269,16 +290,17 @@ public class MyJson {
 
             switch (type) {
                 case 1:
-                    restURL = urlQReplacer(BaseURLs.delQos, "<queueuuid>"); // Delete queue 
+                    restURL = urlQReplacer(BaseURLs.delQos, qc.getOvsid(), qc.getQueueuuid()); // Delete queue 
                     break;
                 case 2:
-                    restURL = urlQosReplacer(BaseURLs.delQos, "<qosuuid>"); // Delete qos 
+                    restURL = urlQosReplacer(BaseURLs.delQos, qc.getOvsid(), qc.getQosuuid()); // Delete qos 
                     break;
                 default:
                     System.out.println("Undefined type to delete, nothing will be done with request");
                     return false;
             }
-
+            if(debug)
+                System.out.println("RestURL: "+restURL);
             url = new URL(restURL);
             // Create authentication string and encode it to Base64
             String authStr = user + ":" + password;
@@ -299,7 +321,7 @@ public class MyJson {
             connection.setDoOutput(true);
 
             // Get the response from connection's inputStream
-            InputStream xml = connection.getInputStream();
+            //InputStream xml = connection.getInputStream();
 
             int status = connection.getResponseCode();
             if (debug) {
@@ -309,7 +331,7 @@ public class MyJson {
             if (status != Constants.NO_CONTENT) {
                 return false;
             }
-            if (debug) {
+            if (true) {
                 if (type == 1) {
                     System.out.println("Queue row deleted with success");
                 } else {
@@ -330,17 +352,20 @@ public class MyJson {
     }
 
     private static JSONObject createQos(QosConfig qc) {
-
+        JSONObject data = null;
         try {
-            JSONObject data = new JSONObject();
-            data.put("parent_uuid", "asdagas-a-das-d-ad-a-");
+
+            data = new JSONObject();
+            data.put("parent_uuid", qc.getPortuuid().trim());
+            //data.put("parent_uuid", "c16e54b4-5e46-429b-8861-c01b1ac98669");
             JSONObject row = new JSONObject();
             JSONObject qos = new JSONObject();
             //define QoS
             qos.put("type", "linux-htb");       //qos type
             JSONArray maxrateArray = new JSONArray();      //maxrate array
             maxrateArray.put("max-rate");
-            maxrateArray.put("1000000000");                   //define max rate value
+            maxrateArray.put(Integer.toString(qc.getMaxRateQos()).concat("000000").trim());    //define max rate value
+            //maxrateArray.put("250000000");
             JSONArray optsArray = new JSONArray();
             optsArray.put(maxrateArray);
             JSONArray mapArray = new JSONArray();
@@ -348,34 +373,36 @@ public class MyJson {
 
             mapArray.put(optsArray);            //incorporate other-config values array
             qos.put("other_config", mapArray);  //incorporate other config on qos row
-            row.put("qos", qos);    //incorporate qos on row
+            row.put("QoS", qos);    //incorporate qos on row
             data.put("row", row);   //incorporate row on root
 
             System.out.println("Request print\n" + data.toString());
+
             return data;
         } catch (JSONException ex) {
+            System.out.println("Exception " + ex);
             Logger.getLogger(TestODL.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;
+        return data;
     }
 
     private static JSONObject createQueue(QosConfig qc) {
 
         try {
             JSONObject data = new JSONObject();
-            data.put("parent_uuid", "asdagas-a-das-d-ad-a-");
+            data.put("parent_uuid", qc.getPortuuid().trim());
             JSONObject row = new JSONObject();
             JSONObject queue = new JSONObject();
             //define Queue
             JSONArray priority = new JSONArray();      //maxrate array
             priority.put("priority");
-            priority.put("5");
+            priority.put(Integer.toString(qc.getPriorityQ()));
             JSONArray minrateArray = new JSONArray();      //maxrate array
             minrateArray.put("min-rate");
-            minrateArray.put("80000000");                   //define max rate value
+            minrateArray.put(Integer.toString(qc.getMinRateQ()).concat("000000").trim());                   //define max rate value
             JSONArray maxrateArray = new JSONArray();      //maxrate array
             maxrateArray.put("max-rate");
-            maxrateArray.put("100000000");                   //define max rate value
+            maxrateArray.put(Integer.toString(qc.getMaxRateQ()).concat("000000").trim());                   //define max rate value
             JSONArray optsArray = new JSONArray();
             optsArray.put(priority);
             optsArray.put(minrateArray);
@@ -385,7 +412,7 @@ public class MyJson {
 
             mapArray.put(optsArray);            //incorporate other-config values array
             queue.put("other_config", mapArray);  //incorporate other config on qos row
-            row.put("queue", queue);    //incorporate qos on row
+            row.put("Queue", queue);    //incorporate qos on row
             data.put("row", row);   //incorporate row on root
 
             System.out.println("Request print\n" + data.toString());

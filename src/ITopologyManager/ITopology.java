@@ -41,6 +41,12 @@ public interface ITopology {
     
     /**
      * 
+     * @return Returns a list of all switches of the topology
+     */
+    public List<TopoNode> getAllSwitches();
+    
+    /**
+     * 
      * @param nodeid unique identifier of the node
      * @return <li>true, node with id "nodeid" exists in topology </li>
      *         <li>false, node with id "nodeid" does exist in topology</li> 

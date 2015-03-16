@@ -16,7 +16,7 @@ import java.util.List;
 public class Topology implements ITopology{
 
     private List<TopoNode> nodes;
-    private final boolean debug = true;
+    private final boolean debug = false;
     
     public Topology(){
         nodes = new ArrayList<>();
@@ -48,6 +48,17 @@ public class Topology implements ITopology{
     public List<TopoNode> getAllNodes() {
         return nodes;
     }
+    
+    @Override
+    public List<TopoNode> getAllSwitches() {
+        List<TopoNode> swNodes = new ArrayList<>();
+        for(TopoNode tn : nodes){
+            if(!tn.isIsHost()){
+                swNodes.add(tn);
+            }
+        }
+        return swNodes;
+    }
 
     @Override
     public boolean nodeExists(String nodeid) {
@@ -77,5 +88,6 @@ public class Topology implements ITopology{
             print+=nodes.get(i).toString()+"\n";
         System.out.println(print);
     }
+
     
 }
