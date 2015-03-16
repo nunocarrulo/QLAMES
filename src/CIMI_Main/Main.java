@@ -5,6 +5,10 @@
  */
 package CIMI_Main;
 
+import DB.FlowMapJpaController;
+import DB.QosMapJpaController;
+import DB.ReservationJpaController;
+import Dijkstra.Launcher;
 import REST_Requests.Constants;
 import REST_Requests.BaseURLs;
 import REST_Requests.MyJson;
@@ -14,6 +18,8 @@ import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
 import TopologyManagerImpl.TopoNode;
 import TopologyManagerUtils.Utils;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 /**
  *
@@ -26,6 +32,9 @@ public class Main {
      */
     static boolean debug = false;
     static boolean queue = false;
+    static ReservationJpaController resCtl;
+    static FlowMapJpaController fmCtl;
+    static QosMapJpaController qmCtl;
 
     public static void main(String[] args) {
         /* Variables and Data structures initialization */
@@ -41,6 +50,12 @@ public class Main {
         System.out.println("Obtaining network topology...");
         MyXML.sendGet(Constants.topo, null); // requesting topology to controller
 
+        /* Finding paths using Dijkstra algorithm */
+        System.out.println("Running Dijkstra algorithm...");
+        Launcher.runDijkstra();
+        System.out.println("Done!");
+        System.exit(0);
+        
         /* Installing ARP flows */
         if (debug) {
             System.out.println("Installing ARP flow in all switches!");
@@ -86,8 +101,17 @@ public class Main {
         /* Remove all qos uuid */
         qc.clear();
         removeQosRowsFromAll(qc);
+        
+        /* Apply Dijkstra to find paths between hosts */
+        
+        /* Prepare database to write and read */
+        prepareDB();
+        
+        /* Poll database entries to check new reservations */
+        
         System.exit(0);
         
+        /* Standalone tests */
         fc = new FlowConfig("openflow:1", 0, 125, 125, "10.0.0.1", "10.0.0.2", "2");
         fc.setFlowName("LOL");  //optional
         String url;
@@ -100,6 +124,14 @@ public class Main {
 
     }
 
+    public static void prepareDB(){
+        EntityManagerFactory emf = javax.persistence.Persistence.createEntityManagerFactory("lol");
+        EntityManager em = emf.createEntityManager();
+        resCtl = new ReservationJpaController(emf);
+        fmCtl = new FlowMapJpaController(emf);
+        qmCtl = new QosMapJpaController(emf);
+    }
+    
     public static void removeARPFromAll() {
         FlowConfig fc = new FlowConfig();
 

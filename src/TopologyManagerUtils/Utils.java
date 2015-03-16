@@ -27,7 +27,7 @@ public class Utils {
 
     private static String[] swPorts;
     public static Topology topo = new Topology();
-    public static final boolean debug = true;
+    public static final boolean debug = false;
     public static String qosUUID;
 
     public static void decodeTopology(Document doc) {
@@ -39,7 +39,7 @@ public class Utils {
         /* Retrieving topology (switches and hosts) */
         NodeList nodes = doc.getElementsByTagName("node");
 
-        if (debug) {
+        if (true) {
             System.out.println("Network Nodes:");
         }
 
@@ -77,9 +77,13 @@ public class Utils {
         }
         // Reading nodes links
         readNodeLinks(doc);
-        System.out.println("------------------------------------------------------------");
-        topo.printNodes();
+        solveBug();
+        if(true){
+            System.out.println("-------------------------------------------------------------------------------------");
+            topo.printNodes();
+        }
         System.out.println("Done decoding topology...");
+        System.out.println("-------------------------------------------------------------------------------------");
     }
 
     public static void decodePortInfo(JSONObject portJson) throws JSONException {
@@ -122,6 +126,18 @@ public class Utils {
             System.out.println(rcvQosUuid);
 
         qosUUID = rcvQosUuid;
+    }
+    
+    private static void solveBug(){
+        TopoNode tn = topo.getNode("openflow:1");
+        NodeCon newNc; 
+        for(NodeCon nc : tn.getNodeCon()){
+            newNc = new NodeCon(tn.getId(), nc.getTo(), nc.getFrom());
+            topo.getNode(nc.getDstNodeId()).addNodeCon(newNc);
+            if(debug)
+                System.out.println("Adding NodeCon: "+newNc.toString()+" to Node: "+topo.getNode(nc.getDstNodeId()));
+        }
+        
     }
     
     private static List<Port> readTermPoints(Element e) {
@@ -193,11 +209,13 @@ public class Utils {
                     }
                     /* Adding connection to source node */
                     nCon = new NodeCon();
-                    nCon.setConnection(srcNode, srcTp, dstTp);  // create node connection
+                    nCon.setConnection(dstNode, srcTp, dstTp);  // create node connection
                     topo.getNode(srcNode).addNodeCon(nCon);     // get source node and add connection to it
 
                 }
             }
         }
     }
+    
+    
 }

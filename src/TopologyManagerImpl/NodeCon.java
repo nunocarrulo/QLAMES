@@ -29,12 +29,26 @@ public class NodeCon implements INodeCon{
      * @serialField to
      */
     private String to;
+
+    public NodeCon() {
+    }
+
+    public NodeCon(String dstNodeId, String from, String to) {
+        this.dstNodeId = dstNodeId;
+        this.from = from;
+        this.to = to;
+    }
     
     @Override
     public void setConnection(String nodeId, String from, String to) {
         dstNodeId = nodeId;
         this.from = from;
         this.to = to;
+    }
+    
+    @Override
+    public String toString(){
+        return ("Target "+dstNodeId+" from "+from+" to "+to);
     }
     
     /* Getters */
