@@ -5,12 +5,11 @@
  */
 package CIMI_Main;
 
-import DB.FlowMapJpaController;
-import DB.QosMapJpaController;
-import DB.ReservationJpaController;
-import Dijkstra.Launcher;
+import Automation.ReservationHandler;
+import DB.DB_Manager;
+import DB.Reservation;
+import Dijkstra.DijkstraOps;
 import REST_Requests.Constants;
-import REST_Requests.BaseURLs;
 import REST_Requests.MyJson;
 import REST_Requests.MyXML;
 import TopologyManagerImpl.FlowConfig;
@@ -18,8 +17,11 @@ import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
 import TopologyManagerImpl.TopoNode;
 import TopologyManagerUtils.Utils;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
 
 /**
  *
@@ -32,15 +34,22 @@ public class Main {
      */
     static boolean debug = false;
     static boolean queue = false;
-    static ReservationJpaController resCtl;
-    static FlowMapJpaController fmCtl;
-    static QosMapJpaController qmCtl;
 
     public static void main(String[] args) {
         /* Variables and Data structures initialization */
         FlowConfig fc = new FlowConfig();
         QosConfig qc = new QosConfig();
-
+        List<Reservation> resList;
+        Reservation r;
+        
+        /* Reservation parameters */
+        String srcIP, dstIP;
+        int priority;
+        long minBW;
+        Calendar calendar;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
+        Date start, end;
+        
         /* Credentials set to Rest requests */
         MyXML.setCredentials("admin", "admin");     // xml
         MyJson.setCredentials("admin", "admin");    // json
@@ -51,9 +60,33 @@ public class Main {
         MyXML.sendGet(Constants.topo, null); // requesting topology to controller
 
         /* Finding paths using Dijkstra algorithm */
-        System.out.println("Running Dijkstra algorithm...");
-        Launcher.runDijkstra();
-        System.out.println("Done!");
+        System.out.println("Running Dijkstra algorithm...\n\tConstructing graph...");
+        DijkstraOps.createGraph();
+        System.out.println("Graph ready. Ready to find paths.");
+        
+        srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
+        DijkstraOps.findPath(srcIP, dstIP);
+
+        System.exit(0);
+        /* Prepare database to write and read */
+        DB_Manager.prepareDB();
+        
+        /* Initialize reservation parameters */
+        //srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
+        priority = 2;
+        minBW = 20000000;
+	calendar = new GregorianCalendar(2015, 2, 17, 13, 0, 0);
+	System.out.println(sdf.format(calendar.getTime()));
+        start = calendar.getTime();
+        calendar = new GregorianCalendar(2015, 2, 17, 22, 30, 0);
+        end = calendar.getTime();
+        
+        /* Add reservation to db */
+        r = new Reservation(srcIP, dstIP, priority, minBW, start, end);
+        DB_Manager.addReservation(r);
+        System.out.println("Reservation added!");
+        DB_Manager.getReservations();
+
         System.exit(0);
         
         /* Installing ARP flows */
@@ -90,6 +123,38 @@ public class Main {
             }
             break;
         }
+        
+        /* Prepare database to write and read */
+        DB_Manager.prepareDB();
+        
+        /* Initialize reservation parameters */
+        srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
+        priority = 2;
+        minBW = 20000000;
+	calendar = new GregorianCalendar(2015, 2, 17, 13, 0, 0);
+	System.out.println(sdf.format(calendar.getTime()));
+        start = calendar.getTime();
+        calendar = new GregorianCalendar(2015, 2, 17, 22, 30, 0);
+        end = calendar.getTime();
+        
+        /* Add reservation to db */
+        r = new Reservation(srcIP, dstIP, priority, minBW, start, end);
+        DB_Manager.addReservation(r);
+        System.out.println("Reservation added!");
+        DB_Manager.getReservations();
+        
+        /* Poll database entries to check new reservations */
+        while(true){
+            // Get all reservations
+            resList = DB_Manager.getReservations();
+            // Verify what needs to be done
+            ReservationHandler.process(resList);
+            
+        }
+        
+        
+        
+        /*
         System.out.println("Done!");
         System.out.println("Waiting 10 seconds...");
         try {
@@ -98,39 +163,24 @@ public class Main {
             Thread.currentThread().interrupt();
         }
         System.out.println("Deleting Qos entries from all ports.");
-        /* Remove all qos uuid */
+        /* Remove all qos uuid 
         qc.clear();
-        removeQosRowsFromAll(qc);
-        
-        /* Apply Dijkstra to find paths between hosts */
-        
-        /* Prepare database to write and read */
-        prepareDB();
-        
-        /* Poll database entries to check new reservations */
-        
-        System.exit(0);
+        removeQosRowsFromAll(qc);        */
         
         /* Standalone tests */
-        fc = new FlowConfig("openflow:1", 0, 125, 125, "10.0.0.1", "10.0.0.2", "2");
-        fc.setFlowName("LOL");  //optional
-        String url;
+        
+        //fc = new FlowConfig("openflow:1", 0, 125, 125, "10.0.0.1", "10.0.0.2", "2");
+        //fc.setFlowName("LOL");  //optional
+        //String url;
         //String url = "http://192.168.57.1:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/15";
         //url = BaseURLs.urlFlowReplacer(BaseURLs.putFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
         //MyXML.sendPut(url, fc);
-        url = BaseURLs.urlFlowReplacer(BaseURLs.delFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
-        MyXML.sendDelete(Constants.flow, fc);
+        //url = BaseURLs.urlFlowReplacer(BaseURLs.delFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
+        //MyXML.sendDelete(Constants.flow, fc);
         //String link = "http://192.168.57.1:8181/restconf/operational/network-topology:network-topology/topology/flow:1/";
 
     }
 
-    public static void prepareDB(){
-        EntityManagerFactory emf = javax.persistence.Persistence.createEntityManagerFactory("lol");
-        EntityManager em = emf.createEntityManager();
-        resCtl = new ReservationJpaController(emf);
-        fmCtl = new FlowMapJpaController(emf);
-        qmCtl = new QosMapJpaController(emf);
-    }
     
     public static void removeARPFromAll() {
         FlowConfig fc = new FlowConfig();

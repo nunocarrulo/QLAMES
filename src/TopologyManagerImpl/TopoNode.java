@@ -90,6 +90,15 @@ public class TopoNode implements ITopoNode {
         
     }
     
+    @Override
+    public String getNodeConFromPortByTarget(String target){
+        for(NodeCon nc : nodeCons){
+            if(nc.getDstNodeId().equals(target))
+                return nc.getFrom();
+        }
+        return "";
+    }
+    
     /* Setter and Getters */
 
     public String getId() {

@@ -55,6 +55,9 @@ public class FlowConfig {
     
     
     public void setFlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort) {
+        //clear object before use it
+        clearFlowConfig();
+        
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
@@ -71,6 +74,19 @@ public class FlowConfig {
         else
             this.dstIP="";
         
+        hardTimeout = idleTimeout = 0;
+    }
+    
+    public void clearFlowConfig(){
+        this.flowName = "";
+        this.nodeID = "";
+        this.tableID = 0;
+        this.flowID = 0;
+        this.flowPrio = 0;
+        this.outputPort = "";
+        this.srcIP = "";
+        this.dstIP = "";
+        queueUUID = "";
         hardTimeout = idleTimeout = 0;
     }
     

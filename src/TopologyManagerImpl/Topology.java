@@ -88,6 +88,17 @@ public class Topology implements ITopology{
             print+=nodes.get(i).toString()+"\n";
         System.out.println(print);
     }
+    
+    @Override
+    public String getHostByIP(String ip){
+        for(TopoNode tn : nodes){
+            if(tn.isIsHost()){
+                if(tn.getIp().equals(ip))
+                    return tn.getId();
+            }
+        }
+        return "";
+    }
 
     
 }

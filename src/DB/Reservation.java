@@ -44,6 +44,8 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Reservation.findByStartDate", query = "SELECT r FROM Reservation r WHERE r.startDate = :startDate"),
     @NamedQuery(name = "Reservation.findByEndDate", query = "SELECT r FROM Reservation r WHERE r.endDate = :endDate")})
 public class Reservation implements Serializable {
+    @Basic(optional = false)
+    private boolean applied;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -84,6 +86,15 @@ public class Reservation implements Serializable {
         this.id = id;
     }
 
+    public Reservation(String srcIP, String dstIP, int priority, long minBW, Date startDate, Date endDate) {
+        this.srcIP = srcIP;
+        this.dstIP = dstIP;
+        this.priority = priority;
+        this.minBW = minBW;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+    
     public Reservation(Integer id, String srcIP, String dstIP, int priority, long minBW, Date startDate, Date endDate) {
         this.id = id;
         this.srcIP = srcIP;
@@ -199,6 +210,14 @@ public class Reservation implements Serializable {
     @Override
     public String toString() {
         return "test.Reservation[ id=" + id + " ]";
+    }
+
+    public boolean getApplied() {
+        return applied;
+    }
+
+    public void setApplied(boolean applied) {
+        this.applied = applied;
     }
     
 }

@@ -52,17 +52,26 @@ public interface ITopology {
      *         <li>false, node with id "nodeid" does exist in topology</li> 
      */
     public boolean nodeExists(String nodeid);
+    
     /**
      * Prints the ids of all the nodes on the topology
      */
     public void printNodesIds();
+    
     /**
      * Print the all node data
      */
     public void printNodes();
+    
     /**
      * Deletes all nodes belonging to the topology
      */
     public void clearTopo();
     
+    /**
+     * 
+     * @param ip IP address of the node to be searched on the topology
+     * @return Returns the node ID of the node with the given IP
+     */
+    public String getHostByIP(String ip);
 }

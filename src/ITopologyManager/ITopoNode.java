@@ -43,4 +43,11 @@ public interface ITopoNode {
      */
     public Port getPort(String portID);
     
+    /**
+     * 
+     * @param target Target Switch ID
+     * @return Returns ID of from port
+     */
+    public String getNodeConFromPortByTarget(String target);
+    
 }
