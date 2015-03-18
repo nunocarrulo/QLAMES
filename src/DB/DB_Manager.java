@@ -66,6 +66,16 @@ public class DB_Manager {
         return qos;
     }
     
+    public static void editReservation(Reservation r){
+        try {
+            resCtl.edit(r);
+        } catch (NonexistentEntityException ex) {
+            Logger.getLogger(DB_Manager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(DB_Manager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     public static void addFlow(FlowMap flow){
         fmCtl.create(flow);
     }

@@ -7,6 +7,7 @@ package TopologyManagerImpl;
 
 import ITopologyManager.IPort;
 import OVS.Queue;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,6 +23,11 @@ public class Port implements IPort{
     private long bwCap;
     private long currBwLoad;
 
+    
+    public Port(){
+        queues = new ArrayList<>();
+    }
+    
     @Override
     public boolean addQueue(Queue q) {
         if(!queues.contains(q)){

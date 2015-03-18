@@ -29,6 +29,7 @@ public class Utils {
     public static Topology topo = new Topology();
     public static final boolean debug = false;
     public static String qosUUID;
+    public static String queueUUID;
 
     public static void decodeTopology(Document doc) {
 
@@ -136,6 +137,10 @@ public class Utils {
             System.out.println(rcvQosUuid);
 
         qosUUID = rcvQosUuid;
+    }
+    
+    public static void setQueueUUID(String queueUUID) {
+        Utils.queueUUID = queueUUID;
     }
     
     private static void solveBug(){

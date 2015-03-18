@@ -17,6 +17,8 @@ import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
 import TopologyManagerImpl.TopoNode;
 import TopologyManagerUtils.Utils;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,7 +37,7 @@ public class Main {
     static boolean debug = false;
     static boolean queue = false;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
         /* Variables and Data structures initialization */
         FlowConfig fc = new FlowConfig();
         QosConfig qc = new QosConfig();
@@ -116,16 +118,22 @@ public class Main {
         //checkPortUUID();
 
         /* Create and store QoS UUID info in every switch and every port*/
-        /*System.out.println("Adding qosUUID to all ports...");
+        System.out.println("Adding qosUUID to all ports...");
+        PrintWriter out = new PrintWriter("qosUUID.txt");
         for (TopoNode tn : Utils.topo.getAllSwitches()) {
             for (Port p : tn.getAllPorts()) {
                 qc.setPortuuid(p.getPortUUID());
                 MyJson.sendPost(queue, Constants.qos, qc);
                 p.setQosUUID(Utils.qosUUID);
                 System.out.println("Added qosUUID: " + p.getQosUUID() + " to port: " + p.getPortID());
+                
+                out.println(Utils.qosUUID);
+                out.flush();
+                
             }
-        }*/
-        
+        }
+        out.close();
+
         /* Prepare database to write and read */
         DB_Manager.prepareDB();
         

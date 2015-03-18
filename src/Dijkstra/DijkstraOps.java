@@ -239,7 +239,7 @@ public class DijkstraOps {
         parsedPath.remove(0); //parsedPath.remove(parsedPath.size()-1);
         revParsedPath.remove(0); //revParsedPath.remove(revParsedPath.size()-1);
 
-        if (debug) {
+        if (true) {
             System.out.println("Up Path:");
             for (int i = 0; i < parsedPath.size() - 1; i++) {
                 System.out.println("SwID " + parsedPath.get(i).getSwID() + " to target " + parsedPath.get(i + 1).getSwID() + " via " + parsedPath.get(i).getPortNumber());
@@ -249,7 +249,8 @@ public class DijkstraOps {
                 System.out.println("SwID " + revParsedPath.get(i).getSwID() + " to target " + revParsedPath.get(i + 1).getSwID() + " via " + revParsedPath.get(i).getPortNumber());
             }
         }
-
+        parsedPath.remove(parsedPath.size()-1);
+        revParsedPath.remove(revParsedPath.size()-1);
         System.out.println("Parsed Path done!");
     }
 

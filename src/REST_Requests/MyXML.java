@@ -363,11 +363,11 @@ public class MyXML {
                 Element actOrderQ = doc.createElement("order");              //create order node
                 actOrderQ.appendChild(doc.createTextNode("0"));              //assign value to order
                 actionQ.appendChild(actOrderQ);                               //append to action node
-                Element outputActionQ = doc.createElement("output-action"); //create output action
+                Element outputActionQ = doc.createElement("set-queue-action"); //create set-queue-action
                 actionQ.appendChild(outputActionQ);                         //append to action
-                Element outputNodeConQ = doc.createElement("output-node-connector");    //create output con
-                outputNodeConQ.appendChild(doc.createTextNode(fc.getOutputPort()));                    //set output con value
-                outputActionQ.appendChild(outputNodeConQ);                              //append to output action
+                Element outputNodeConQ = doc.createElement("queue-id");    //create output con
+                outputNodeConQ.appendChild(doc.createTextNode(fc.getqID()));                    //set queue id
+                outputActionQ.appendChild(outputNodeConQ);                              //append to set-queue-action
             }
             /* Output to a port action */
             Element action = doc.createElement("action");               

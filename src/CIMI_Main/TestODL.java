@@ -5,6 +5,13 @@
  */
 package CIMI_Main;
 
+import REST_Requests.Constants;
+import REST_Requests.MyJson;
+import TopologyManagerImpl.QosConfig;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -21,15 +28,19 @@ public class TestODL {
      * @param args the command line arguments
      */
     private static String lol;
-    public static void main(String[] args) {
-        String a, b;
-        lol = "xpto";
-        a = lol;
-        lol = "mudei";
-        b = lol;
-        
-        System.out.println("a="+a+" b="+b+" lol="+lol);
-        
+
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+        MyJson.setCredentials("admin", "admin");    // json
+        String ovsid = "192.168.57.102:44926";
+        try (BufferedReader br = new BufferedReader(new FileReader("qosUUID.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+                QosConfig qc = new QosConfig(ovsid, line);
+                MyJson.sendDelete(Constants.qos, qc);
+            }
+        }
+
         System.exit(0);
         jsonReqQos();
         jsonReqQueue();

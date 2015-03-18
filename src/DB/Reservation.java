@@ -6,7 +6,6 @@
 package DB;
 
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
@@ -74,9 +73,9 @@ public class Reservation implements Serializable {
     @Column(name = "endDate")
     @Temporal(TemporalType.TIMESTAMP)
     private Date endDate;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "resID", fetch = FetchType.LAZY)
+    @OneToMany(cascade = {CascadeType.REFRESH, CascadeType.REMOVE}, mappedBy = "resID", fetch = FetchType.LAZY)
     private Collection<QosMap> qosMapCollection;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "resID", fetch = FetchType.LAZY)
+    @OneToMany(cascade = {CascadeType.REFRESH, CascadeType.REMOVE}, mappedBy = "resID", fetch = FetchType.LAZY)
     private Collection<FlowMap> flowMapCollection;
 
     public Reservation() {

@@ -17,6 +17,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -255,6 +256,7 @@ public class MyJson {
                 }
                 return false;
             }
+            
             /* READ UUID */
             BufferedReader streamReader = new BufferedReader(new InputStreamReader(jsonIS, "UTF-8"));
             StringBuilder responseStrBuilder = new StringBuilder();
@@ -266,9 +268,14 @@ public class MyJson {
             if (debug) {
                 System.out.println(responseStrBuilder.toString());
             }
-            //saving in a temp static var to be stored on topo data structure
-            Utils.setQosUUID(responseStrBuilder.toString());
-
+            
+            if(queue){
+                //saving in a temp static var to be stored on queue data structure
+                Utils.setQueueUUID(responseStrBuilder.toString());
+            }else{
+                //saving in a temp static var to be stored on topo data structure
+                Utils.setQosUUID(responseStrBuilder.toString());
+            }
         } catch (Exception e) {
             System.out.println("LOLException " + e);
         } finally {
@@ -290,7 +297,7 @@ public class MyJson {
 
             switch (type) {
                 case 1:
-                    restURL = urlQReplacer(BaseURLs.delQos, qc.getOvsid(), qc.getQueueuuid()); // Delete queue 
+                    restURL = urlQReplacer(BaseURLs.delQueue, qc.getOvsid(), qc.getQueueuuid()); // Delete queue 
                     break;
                 case 2:
                     restURL = urlQosReplacer(BaseURLs.delQos, qc.getOvsid(), qc.getQosuuid()); // Delete qos 
@@ -324,7 +331,7 @@ public class MyJson {
             //InputStream xml = connection.getInputStream();
 
             int status = connection.getResponseCode();
-            if (debug) {
+            if (true) {
                 System.out.println("Status: " + status);
             }
 
@@ -376,7 +383,7 @@ public class MyJson {
             row.put("QoS", qos);    //incorporate qos on row
             data.put("row", row);   //incorporate row on root
 
-            System.out.println("Request print\n" + data.toString());
+            //System.out.println("Request print\n" + data.toString());
 
             return data;
         } catch (JSONException ex) {
@@ -415,7 +422,7 @@ public class MyJson {
             row.put("Queue", queue);    //incorporate qos on row
             data.put("row", row);   //incorporate row on root
 
-            System.out.println("Request print\n" + data.toString());
+            //System.out.println("Request print\n" + data.toString());
             return data;
         } catch (JSONException ex) {
             Logger.getLogger(TestODL.class.getName()).log(Level.SEVERE, null, ex);
