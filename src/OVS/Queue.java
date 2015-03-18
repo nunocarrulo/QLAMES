@@ -11,20 +11,27 @@ package OVS;
  */
 public class Queue {
     private String uuid;
-    private long maxRate;
-    private long minRate;
+    private int maxRate;
+    private int minRate;
     private int priority;
 
     public Queue(String uuid) {
         this.uuid = uuid;
     }
 
-    public Queue(long minRate, int priority) {
+    public Queue(int minRate, int priority) {
         this.minRate = minRate;
         this.priority = priority;
     }
 
-    public Queue(long maxRate, long minRate, int priority) {
+    public Queue(int minRate, int maxRate, int priority) {
+        this.maxRate = maxRate;
+        this.minRate = minRate;
+        this.priority = priority;
+    }
+    
+    public Queue(String qUUID, int minRate, int maxRate, int priority) {
+        this.uuid = qUUID;
         this.maxRate = maxRate;
         this.minRate = minRate;
         this.priority = priority;
@@ -34,11 +41,11 @@ public class Queue {
         this.uuid = uuid;
     }
 
-    public void setMaxRate(long maxRate) {
+    public void setMaxRate(int maxRate) {
         this.maxRate = maxRate;
     }
 
-    public void setMinRate(long minRate) {
+    public void setMinRate(int minRate) {
         this.minRate = minRate;
     }
 
@@ -50,11 +57,11 @@ public class Queue {
         return uuid;
     }
 
-    public long getMaxRate() {
+    public int getMaxRate() {
         return maxRate;
     }
 
-    public long getMinRate() {
+    public int getMinRate() {
         return minRate;
     }
 

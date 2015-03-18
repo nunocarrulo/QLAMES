@@ -10,6 +10,8 @@ import DB.FlowMap;
 import DB.QosMap;
 import DB.Reservation;
 import Dijkstra.DijkstraOps;
+import Dijkstra.ParsedPath;
+import OVS.Queue;
 import REST_Requests.Constants;
 import REST_Requests.MyJson;
 import REST_Requests.MyXML;
@@ -31,89 +33,206 @@ public class ReservationHandler {
     private static final int Within = 3;
     private static List<QosMap> qosList;
     private static List<FlowMap> flowList;
+    private static List<ParsedPath> PP;
+    private static List<ParsedPath> revPP;
+    private static Queue q;
+    private static QosMap qm;
+    private static FlowMap fm;
     private static final QosConfig qc = new QosConfig();
     private static final FlowConfig fc = new FlowConfig();
     private static String srcHostId, dstHostId;
-    
-    public static void process(List<Reservation> resList){
-        
+    private static int flowCounter = 10;
+    private static int queueCounterID = 1;
+
+    public static void process(List<Reservation> resList) {
+
         /* Retrieving actual time */
         now = new Date();
-        for(Reservation r : resList){
-            
+        //Clearing config data structure just in case
+        fc.clearFlowConfig();
+        qc.clear();
+
+        for (Reservation r : resList) {
+
             /* Apply actions according to the dates */
-            switch(checkDate(now, r.getStartDate(), r.getEndDate())){
+            switch (checkDate(now, r.getStartDate(), r.getEndDate())) {
                 case Prev:
-                        // do nothing
-                        break;
+                    // do nothing
+                    System.out.println("------------------------------------------------------------------------------");
+                    System.out.println("PREV");
+                    break;
                 case After:
-                        int resID = r.getId();
-                        //find all entries on table QosMap associated with this reservationID
-                        qosList = DB_Manager.getQosMap(resID);
-                        
+                    System.out.println("------------------------------------------------------------------------------");
+                    System.out.println("AFTER");
+                    int resID = r.getId();
+                    //find all entries on table QosMap associated with this reservationID
+                    qosList = DB_Manager.getQosMap(resID);
+
+                    //define qos config
+                    qc.setOvsid(Constants.ovsID);
+
+                    //delete all queues on the switches
+                    for (QosMap q : qosList) {
+                        qc.setQueueuuid(q.getQueueUUID());
+                        MyJson.sendDelete(Constants.queue, qc);
+                    }
+
+                    //find all entries on table FlowMap associated with this reservationID 
+                    flowList = DB_Manager.getFlowMap(resID);
+
+                    //delete all the flows on the switches
+                    for (FlowMap f : flowList) {
+                        //define flow config
+                        fc.clearFlowConfig();
+                        fc.setNodeID(f.getSwID());
+                        fc.setTableID(f.getTableID());
+                        fc.setFlowID(f.getFlowID());
+                        MyXML.sendDelete(Constants.flow, fc);
+                    }
+
+                    //delete the entry reservation (and hopefully all other entries will be deleted)
+                    DB_Manager.deleteReservation(resID);
+
+                    break;
+                case Within:
+                    System.out.println("------------------------------------------------------------------------------");
+                    System.out.println("WITHIN");
+                    // if flag "applied" is true break
+                    if (r.getApplied()) {
+                        System.out.println("RH: Policy already applied!");
+                        break;
+                    }
+
+                    // Apply Dijkstra to find paths between hosts 
+                    DijkstraOps.findPath(r.getSrcIP(), r.getDstIP());
+
+                    /* Getting Up Path */
+                    PP = DijkstraOps.getParsedPath();
+
+                    //create queues and flows to UP path
+                    for (ParsedPath p : PP) {
+                        int prio = r.getPriority();
+
+                        /* Queue */
+                        //get qosUUID
+                        System.out.println(Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber())));
+                        String qosUUID
+                                = Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber()))
+                                .getQosUUID();
+
                         //define qos config
                         qc.setOvsid(Constants.ovsID);
-                        
-                        //delete all queues on the switches
-                        for(QosMap q : qosList){
-                            qc.setQueueuuid(q.getQueueUUID());
-                            MyJson.sendDelete(Constants.queue, qc);
+                        //create queue config
+                        qc.setQosConfig(qosUUID, r.getPriority(), r.getMinBW(), r.getMaxBW());
+
+                        //send queue config to ovsdb
+                        if (MyJson.sendPost(true, Constants.queue, qc)) {
+                            System.out.println("RH: Post send successfully!");
+                        } else {
+                            System.out.println("RH: Post failed!");
                         }
-                        
-                        //find all entries on table FlowMap associated with this reservationID 
-                        flowList = DB_Manager.getFlowMap(resID);
-                        
-                        //delete all the flows on the switches
-                        for(FlowMap f : flowList){
-                            //define flow config
-                            fc.clearFlowConfig();
-                            fc.setNodeID(f.getSwID());
-                            fc.setTableID(f.getTableID());
-                            fc.setFlowID(f.getFlowID());
-                            MyXML.sendDelete(Constants.flow, fc);
+
+                        //Save queue in port data structure
+                        q = new Queue(Utils.qosUUID, qc.getMinRateQ(), qc.getMaxRateQ(), qc.getPriorityQ());
+                        Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).addQueue(q);
+
+                        //Save Queue in db
+                        qm = new QosMap(p.getSwID(), Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).getPortID(),
+                                Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).getPortUUID(), qosUUID, q.getUuid());
+                        DB_Manager.addQos(qm);
+
+                        /* Flows */
+                        // create flow config
+                        fc.setFlowConfig(p.getSwID(), 0, flowCounter, r.getPriority(), r.getSrcIP(), r.getDstIP(),
+                                p.getPortNumber(), Integer.toString(queueCounterID));
+
+                        // send flow to controller and switch
+                        MyXML.sendPut(true, false, fc);
+
+                        //save Flow in db 
+                        fm = new FlowMap(fc.getNodeID(), Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).getPortID(),
+                                0, flowCounter);
+                        flowCounter++;
+                        DB_Manager.addFlow(fm);
+
+                    }
+
+                    /* Getting Down Path */
+                    revPP = DijkstraOps.getRevParsedPath();
+
+                    //Clearing config data structure just in case
+                    fc.clearFlowConfig();
+                    qc.clear();
+
+                    //create queues and flow to DOWN path
+                    for (ParsedPath p : revPP) {
+                        int prio = r.getPriority();
+
+                        /* Queue */
+                        //get qosUUID
+                        System.out.println(Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber())));
+                        String qosUUID
+                                = Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber()))
+                                .getQosUUID();
+                        //define qos config
+                        qc.setOvsid(Constants.ovsID);
+                        //create queue config
+                        qc.setQosConfig(qosUUID, r.getPriority(), r.getMinBW(), r.getMaxBW());
+
+                        //send queue config to ovsdb
+                        if (MyJson.sendPost(true, Constants.queue, qc)) {
+                            System.out.println("RH: Post send successfully!");
+                        } else {
+                            System.out.println("RH: Post failed!");
                         }
-                        
-                        //delete the entry reservation (and hopefully all other entries will be deleted)
-                        DB_Manager.deleteReservation(resID);
-                        
-                        break;
-                case Within:
-                        // if flag "applied" is true break
-                        if(r.getApplied())
-                            break;
-                        
-                        // Apply Dijkstra to find paths between hosts 
-                        // get Hosts ID
-                        srcHostId = Utils.topo.getHostByIP(r.getSrcIP());
-                        dstHostId = Utils.topo.getHostByIP(r.getDstIP());
-                        
-                        if( srcHostId.isEmpty() || dstHostId.isEmpty()){
-                            System.out.println("Host "+srcHostId+" or "+dstHostId+" not found! Nothing will be added");
-                            break;
-                        }
-                        //Finding path between source and dest
-                        System.out.println("Finding path between source "+srcHostId+" and dest "+dstHostId);
-                        DijkstraOps.findPath(srcHostId, dstHostId);
-                        //create queues
-                        //create flows
-                        //edit reservation and set flag "applied" true
-                        //insert into database with the correspondent reservation id
-                        break;
+
+                        //Save queue in port data structure
+                        q = new Queue(Utils.qosUUID, qc.getMinRateQ(), qc.getMaxRateQ(), qc.getPriorityQ());
+                        Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).addQueue(q);
+
+                        //Save Queue in db
+                        qm = new QosMap(p.getSwID(), Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).getPortID(),
+                                Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).getPortUUID(), qosUUID, q.getUuid());
+                        qm.setResID(r); //set reservation as FK
+                        DB_Manager.addQos(qm);
+
+                        /* Flows */
+                        // create flow config
+                        fc.setFlowConfig(p.getSwID(), 0, flowCounter, r.getPriority(), r.getSrcIP(), r.getDstIP(),
+                                p.getPortNumber(), Integer.toString(queueCounterID));
+
+                        // send flow to controller and switch
+                        MyXML.sendPut(true, false, fc);
+
+                        //save Flow in db 
+                        fm = new FlowMap(fc.getNodeID(), Utils.topo.getNode(p.getSwID()).getPort(p.getPortNumber()).getPortID(),
+                                0, flowCounter);
+
+                        fm.setResID(r); //set reservation as FK
+                        flowCounter++;
+                        DB_Manager.addFlow(fm);
+
+                    }
+                    //edit reservation and set flag "applied" true
+                    r.setApplied(true);
+
+                    break;
                 default:
                     System.out.println("Error processing dates!");
                     break;
             }
         }
-        
+
     }
-    
-    private static int checkDate(Date now, Date start, Date after){
-        if(now.before(start))
+
+    private static int checkDate(Date now, Date start, Date after) {
+        if (now.before(start)) {
             return Prev;
-        else if(now.after(after))
+        } else if (now.after(after)) {
             return After;
-        else 
-            return Within; 
+        } else {
+            return Within;
+        }
     }
-    
+
 }

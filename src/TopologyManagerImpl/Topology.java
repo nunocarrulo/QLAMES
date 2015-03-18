@@ -93,6 +93,7 @@ public class Topology implements ITopology{
     public String getHostByIP(String ip){
         for(TopoNode tn : nodes){
             if(tn.isIsHost()){
+                //System.out.println("IsHost Host= "+tn.getId()+" Ip= "+tn.getIp()+" rcv IP= "+ip);
                 if(tn.getIp().equals(ip))
                     return tn.getId();
             }

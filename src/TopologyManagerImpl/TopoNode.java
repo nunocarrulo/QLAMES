@@ -90,6 +90,18 @@ public class TopoNode implements ITopoNode {
         
     }
     
+    public Port getPortByNumber(int portNumber) {
+        
+        for(Port port : ports){
+            if(Integer.parseInt(port.getPortID().split(":")[2]) == portNumber)
+                return port;
+        }
+        if(Utils.debug)
+            System.out.println("Port not found!");
+        return null;
+        
+    }
+    
     @Override
     public String getNodeConFromPortByTarget(String target){
         for(NodeCon nc : nodeCons){

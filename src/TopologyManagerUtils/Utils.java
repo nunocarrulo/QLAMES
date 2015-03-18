@@ -54,8 +54,16 @@ public class Utils {
 
                     /* Reading termination ports of node and Creating node */
                     topoNode = new TopoNode();
-                    topoNode.setNode(node_id, readTermPoints(e));
-
+                    List<Port> lol = readTermPoints(e);
+                    if(node_id.equals("openflow:2")){
+                        System.out.println("Utils OPENFLOW:2");
+                        for(Port p : lol){
+                            System.out.println("\tPortID= "+p.getPortID());
+                        }
+                    }
+                    
+                    topoNode.setNode(node_id, lol);
+                    
                     // if node is a host insert ip and mac
                     if (node_id.contains("host:")) {
                         //retrieve ip
@@ -95,6 +103,7 @@ public class Utils {
             System.out.println("-------------------------------Decoding Port UUID-------------------------------");
         /* Get every port uuid and save it on portInfo data structure */
         while (it.hasNext()) {
+            
             puuid = it.next().toString();    // get port uuid
             swPort = portJson.getJSONObject("rows").getJSONObject(puuid).get("name").toString().split("-");
 
@@ -104,6 +113,7 @@ public class Utils {
             
             sw = "openflow:".concat((swPort[0].substring(1)));
             port = sw.concat(":").concat(swPort[1].substring(3));
+            
             if(debug)
                 System.out.println("| Sw: " + sw + " | Port: " + port + " | PortUUID: " + puuid+ " |");
             /* Saving portUUIDs into topo data structure*/
@@ -196,7 +206,7 @@ public class Utils {
                     if (debug) {
                         System.out.println("\tSource: " + srcNode + "\t\t" + srcTp);
                     }
-
+                    
                     // Retrieving destination information
                     Node dst = e.getElementsByTagName("destination").item(0);
                     Element dstElem = (Element) dst;
@@ -210,6 +220,7 @@ public class Utils {
                     /* Adding connection to source node */
                     nCon = new NodeCon();
                     nCon.setConnection(dstNode, srcTp, dstTp);  // create node connection
+                    
                     topo.getNode(srcNode).addNodeCon(nCon);     // get source node and add connection to it
 
                 }

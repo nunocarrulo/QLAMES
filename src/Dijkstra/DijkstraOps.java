@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class DijkstraOps {
 
-    private static List<Vertex> vertices = new ArrayList<>();
+    private static final List<Vertex> vertices = new ArrayList<>();
     private static final List<ParsedPath> parsedPath = new ArrayList<>();
     private static final List<ParsedPath> revParsedPath = new ArrayList<>();   //reversed path
     private static final boolean debug = false;
@@ -147,14 +147,24 @@ public class DijkstraOps {
         if (debug) {
             System.out.println("-------------------------------------------------------------------------------------");
         }
+        
         Vertex src = null;
         Vertex target = null;
+        boolean foundSrc = false;
+        boolean foundDst = false;
+        
         for (Vertex vertice : vertices) {
+            //System.out.println("DijktraOps: Vertice="+vertice.name+" Source= "+Utils.topo.getHostByIP(source)+" target "+Utils.topo.getHostByIP(dest));
+            
             if (Utils.topo.getHostByIP(source).equals(vertice.name)) {
                 src = vertice;
+                foundSrc = true;
             } else if (Utils.topo.getHostByIP(dest).equals(vertice.name)) {
                 target = vertice;
+                foundDst = true;
             }
+            if(foundSrc && foundDst)
+                break;
 
         }
         if (src == null || target == null) {
@@ -168,7 +178,7 @@ public class DijkstraOps {
 
         List<Vertex> path = getShortestPathTo(target);  //find shortest path
 
-        if (true) {
+        if (debug) {
             System.out.println("Path: " + path);
         }
         // decoding of the path and reverse path has "Switch <swID> to <target switch id> via <portID>" 
@@ -229,7 +239,7 @@ public class DijkstraOps {
         parsedPath.remove(0); //parsedPath.remove(parsedPath.size()-1);
         revParsedPath.remove(0); //revParsedPath.remove(revParsedPath.size()-1);
 
-        if (true) {
+        if (debug) {
             System.out.println("Up Path:");
             for (int i = 0; i < parsedPath.size() - 1; i++) {
                 System.out.println("SwID " + parsedPath.get(i).getSwID() + " to target " + parsedPath.get(i + 1).getSwID() + " via " + parsedPath.get(i).getPortNumber());

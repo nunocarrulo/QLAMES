@@ -45,7 +45,7 @@ public class Main {
         /* Reservation parameters */
         String srcIP, dstIP;
         int priority;
-        long minBW;
+        int minBW, maxBW;
         Calendar calendar;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
         Date start, end;
@@ -58,39 +58,42 @@ public class Main {
         /* Getting Topology */
         System.out.println("Obtaining network topology...");
         MyXML.sendGet(Constants.topo, null); // requesting topology to controller
-
+        //System.exit(0);
         /* Finding paths using Dijkstra algorithm */
         System.out.println("Running Dijkstra algorithm...\n\tConstructing graph...");
         DijkstraOps.createGraph();
         System.out.println("Graph ready. Ready to find paths.");
         
-        srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
-        DijkstraOps.findPath(srcIP, dstIP);
-
-        System.exit(0);
+        //srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
+        //DijkstraOps.findPath(srcIP, dstIP);
+        //System.exit(0);
+        
         /* Prepare database to write and read */
-        DB_Manager.prepareDB();
+        //DB_Manager.prepareDB();
         
         /* Initialize reservation parameters */
         //srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
-        priority = 2;
-        minBW = 20000000;
-	calendar = new GregorianCalendar(2015, 2, 17, 13, 0, 0);
+        /*priority = 2;
+        minBW = 20000;
+        maxBW = 30000;
+	calendar = new GregorianCalendar(2015, 2, 18, 11, 0, 0);
 	System.out.println(sdf.format(calendar.getTime()));
         start = calendar.getTime();
-        calendar = new GregorianCalendar(2015, 2, 17, 22, 30, 0);
+        calendar = new GregorianCalendar(2015, 2, 18, 21, 30, 0);
         end = calendar.getTime();
         
-        /* Add reservation to db */
-        r = new Reservation(srcIP, dstIP, priority, minBW, start, end);
+        //DB_Manager.deleteAllReservations();
+        
+        // Add reservation to db 
+        r = new Reservation(srcIP, dstIP, priority, minBW, maxBW, start, end);
         DB_Manager.addReservation(r);
         System.out.println("Reservation added!");
-        DB_Manager.getReservations();
+        //DB_Manager.getReservations();
 
-        System.exit(0);
+        System.exit(0);*/
         
         /* Installing ARP flows */
-        if (debug) {
+        /*if (true) {
             System.out.println("Installing ARP flow in all switches!");
         }
         for (TopoNode tn : Utils.topo.getAllNodes()) {
@@ -101,7 +104,7 @@ public class Main {
             fc.setFlowConfig(tn.getId(), 0, 4, 4, "", "", Constants.OFLogicalPorts.ALL.name());
             MyXML.sendPut(false, true, fc);
             //removeARPFromAll();
-        }
+        }*/
 
         /* Getting Ovs Node Id info */
         MyJson.sendGet(Constants.node, null);
@@ -113,7 +116,7 @@ public class Main {
         //checkPortUUID();
 
         /* Create and store QoS UUID info in every switch and every port*/
-        System.out.println("Adding qosUUID to all ports...");
+        /*System.out.println("Adding qosUUID to all ports...");
         for (TopoNode tn : Utils.topo.getAllSwitches()) {
             for (Port p : tn.getAllPorts()) {
                 qc.setPortuuid(p.getPortUUID());
@@ -121,14 +124,13 @@ public class Main {
                 p.setQosUUID(Utils.qosUUID);
                 System.out.println("Added qosUUID: " + p.getQosUUID() + " to port: " + p.getPortID());
             }
-            break;
-        }
+        }*/
         
         /* Prepare database to write and read */
         DB_Manager.prepareDB();
         
         /* Initialize reservation parameters */
-        srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
+        /*srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
         priority = 2;
         minBW = 20000000;
 	calendar = new GregorianCalendar(2015, 2, 17, 13, 0, 0);
@@ -138,20 +140,23 @@ public class Main {
         end = calendar.getTime();
         
         /* Add reservation to db */
+        /*
         r = new Reservation(srcIP, dstIP, priority, minBW, start, end);
         DB_Manager.addReservation(r);
         System.out.println("Reservation added!");
-        DB_Manager.getReservations();
+        DB_Manager.getReservations();*/
         
+        System.out.println("------------------------------------------------------------------------------");
+        System.out.println("Processing Reservations Loop...");
         /* Poll database entries to check new reservations */
         while(true){
             // Get all reservations
             resList = DB_Manager.getReservations();
             // Verify what needs to be done
             ReservationHandler.process(resList);
-            
+            break;
         }
-        
+        System.out.println("Done Once!");
         
         
         /*

@@ -63,9 +63,9 @@ public class Reservation implements Serializable {
     private int priority;
     @Basic(optional = false)
     @Column(name = "minBW")
-    private long minBW;
+    private int minBW;
     @Column(name = "maxBW")
-    private BigInteger maxBW;
+    private int maxBW;
     @Basic(optional = false)
     @Column(name = "startDate")
     @Temporal(TemporalType.TIMESTAMP)
@@ -86,7 +86,7 @@ public class Reservation implements Serializable {
         this.id = id;
     }
 
-    public Reservation(String srcIP, String dstIP, int priority, long minBW, Date startDate, Date endDate) {
+    public Reservation(String srcIP, String dstIP, int priority, int minBW, Date startDate, Date endDate) {
         this.srcIP = srcIP;
         this.dstIP = dstIP;
         this.priority = priority;
@@ -95,7 +95,17 @@ public class Reservation implements Serializable {
         this.endDate = endDate;
     }
     
-    public Reservation(Integer id, String srcIP, String dstIP, int priority, long minBW, Date startDate, Date endDate) {
+    public Reservation(String srcIP, String dstIP, int priority, int minBW, int maxBW, Date startDate, Date endDate) {
+        this.srcIP = srcIP;
+        this.dstIP = dstIP;
+        this.priority = priority;
+        this.minBW = minBW;
+        this.maxBW = maxBW;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+    
+    public Reservation(Integer id, String srcIP, String dstIP, int priority, int minBW, Date startDate, Date endDate) {
         this.id = id;
         this.srcIP = srcIP;
         this.dstIP = dstIP;
@@ -137,19 +147,19 @@ public class Reservation implements Serializable {
         this.priority = priority;
     }
 
-    public long getMinBW() {
+    public int getMinBW() {
         return minBW;
     }
 
-    public void setMinBW(long minBW) {
+    public void setMinBW(int minBW) {
         this.minBW = minBW;
     }
 
-    public BigInteger getMaxBW() {
+    public int getMaxBW() {
         return maxBW;
     }
 
-    public void setMaxBW(BigInteger maxBW) {
+    public void setMaxBW(int maxBW) {
         this.maxBW = maxBW;
     }
 

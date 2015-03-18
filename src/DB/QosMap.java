@@ -76,6 +76,13 @@ public class QosMap implements Serializable {
         this.qosUUID = qosUUID;
         this.queueUUID = queueUUID;
     }
+    public QosMap( String swID, String portID, String portUUID, String qosUUID, String queueUUID) {
+        this.swID = swID;
+        this.portID = portID;
+        this.portUUID = portUUID;
+        this.qosUUID = qosUUID;
+        this.queueUUID = queueUUID;
+    }
 
     public Integer getId() {
         return id;

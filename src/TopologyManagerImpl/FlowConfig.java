@@ -20,7 +20,7 @@ public class FlowConfig {
     private int idleTimeout;
     private String etherType;
     private String outputPort;  //parse it
-    private String queueUUID;
+    private String qID;
     private String srcIP;
     private String dstIP;
 
@@ -40,14 +40,14 @@ public class FlowConfig {
         hardTimeout = idleTimeout = 0;
     }
 
-    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort, String queueUUID) {
+    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort, String qid) {
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
         this.flowPrio = flowPrio;
         this.srcIP = srcIP + "/32";
         this.dstIP = dstIP + "/32";
-        this.queueUUID = queueUUID;
+        this.qID = qid;
         this.outputPort = outputPort;
 
         hardTimeout = idleTimeout = 0;
@@ -77,6 +77,30 @@ public class FlowConfig {
         hardTimeout = idleTimeout = 0;
     }
     
+    public void setFlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort, String queueUUID) {
+        //clear object before use it
+        clearFlowConfig();
+        
+        this.nodeID = nodeid;
+        this.tableID = tableID;
+        this.flowID = flowID;
+        this.flowPrio = flowPrio;
+        this.outputPort = outputPort;
+        this.qID = queueUUID;
+        
+        // Concat mask if not empty
+        if(!srcIP.isEmpty())
+            this.srcIP = srcIP + "/32";
+        else
+            this.srcIP="";
+        if(!dstIP.isEmpty())
+            this.dstIP = dstIP + "/32";
+        else
+            this.dstIP="";
+        
+        hardTimeout = idleTimeout = 0;
+    }
+    
     public void clearFlowConfig(){
         this.flowName = "";
         this.nodeID = "";
@@ -86,7 +110,7 @@ public class FlowConfig {
         this.outputPort = "";
         this.srcIP = "";
         this.dstIP = "";
-        queueUUID = "";
+        qID = "";
         hardTimeout = idleTimeout = 0;
     }
     
@@ -156,12 +180,12 @@ public class FlowConfig {
         this.outputPort = outputPort;
     }
 
-    public String getQueueUUID() {
-        return queueUUID;
+    public String getqID() {
+        return qID;
     }
 
-    public void setQueueUUID(String queueUUID) {
-        this.queueUUID = queueUUID;
+    public void setqID(String qID) {
+        this.qID = qID;
     }
 
     public String getSrcIP() {

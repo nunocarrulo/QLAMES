@@ -20,8 +20,17 @@ public class TestODL {
     /**
      * @param args the command line arguments
      */
+    private static String lol;
     public static void main(String[] args) {
-
+        String a, b;
+        lol = "xpto";
+        a = lol;
+        lol = "mudei";
+        b = lol;
+        
+        System.out.println("a="+a+" b="+b+" lol="+lol);
+        
+        System.exit(0);
         jsonReqQos();
         jsonReqQueue();
         System.out.println("DONE!");

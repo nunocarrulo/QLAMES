@@ -52,6 +52,18 @@ public class QosConfig {
         portuuid = qosuuid = queueuuid = "";
     }
     
+    public void setQosConfig(String portUUID, int maxR){
+        this.portuuid = portUUID;
+        this.maxRateQ = maxR;
+    }
+    
+    public void setQosConfig(String qosUUID, int priority, int minR, int maxR){
+        this.qosuuid = qosUUID;
+        this.priorityQ = priority;
+        this.minRateQ = minR;
+        this.maxRateQ = maxR;
+    }
+    
     public String getOvsid() {
         return ovsid;
     }

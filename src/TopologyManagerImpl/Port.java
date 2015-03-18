@@ -49,23 +49,12 @@ public class Port implements IPort{
         return false;
        
     }
-    /*
+    
     @Override
-    public boolean addQos(String qos) {
-        if(qosUUID.isEmpty()){
-            qosUUID = qos;
-            return true;
-        }else{
-            System.out.println("QoS row already exists.");
-            return false;
-        }
+    public String toString(){
+        return ("PortID: "+portID+" PortUUID: "+portUUID+" QosUUID: "+qosUUID);
     }
-
-    @Override
-    public void delQos() {
-        qosUUID = "";
-    }
-    */
+    
     @Override
     public String getPortUUID() {
         return portUUID;

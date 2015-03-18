@@ -71,6 +71,13 @@ public class FlowMap implements Serializable {
         this.tableID = tableID;
         this.flowID = flowID;
     }
+    
+    public FlowMap(String swID, String portID, int tableID, int flowID) {
+        this.swID = swID;
+        this.portID = portID;
+        this.tableID = tableID;
+        this.flowID = flowID;
+    }
 
     public Integer getId() {
         return id;

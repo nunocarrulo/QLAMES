@@ -42,7 +42,7 @@ public class DB_Manager {
         if (debug) {
             System.out.println("Printing existing Reservations ...");
             for (Reservation r : resList) {
-                System.out.println("ID=" + r.getId() + " sourceIP= " + r.getSrcIP() + " dstIP= " + r.getDstIP());
+                System.out.println("ID =" + r.getId() + " sourceIP = " + r.getSrcIP() + " dstIP = " + r.getDstIP());
             }
         }
         return resList;
@@ -66,7 +66,7 @@ public class DB_Manager {
         return qos;
     }
     
-    public static void addQueue(FlowMap flow){
+    public static void addFlow(FlowMap flow){
         fmCtl.create(flow);
     }
     

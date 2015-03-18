@@ -282,7 +282,7 @@ public class MyXML {
         return true;
     }
     
-    public static Document createFlow(boolean useQueue, boolean arp, FlowConfig fc) {
+    private static Document createFlow(boolean useQueue, boolean arp, FlowConfig fc) {
         System.out.println("Creating Flow with id= "+fc.getFlowID());
         
         try {
