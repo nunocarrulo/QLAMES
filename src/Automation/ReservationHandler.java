@@ -93,7 +93,13 @@ public class ReservationHandler {
                         MyXML.sendDelete(Constants.flow, fc);
                     }
 
-                    //delete the entry reservation (and hopefully all other entries will be deleted)
+                    //delete the entries associated with reservation
+                    DB_Manager.deleteQosMapEntries(resID);
+                    
+                    //delete the entries associated with reservation 
+                    DB_Manager.deleteFlowMapEntries(resID);
+                    
+                    //delete the entry reservation 
                     DB_Manager.deleteReservation(resID);
 
                     break;
@@ -105,25 +111,29 @@ public class ReservationHandler {
                         System.out.println("RH: Policy already applied!");
                         break;
                     }
-                    
+
                     // Apply Dijkstra to find paths between hosts 
                     DijkstraOps.findPath(r.getSrcIP(), r.getDstIP());
-                    
+
+                    //edit reservation and set flag "applied" true
+                    r.setApplied(true);
+                    DB_Manager.editReservation(r);
+                    //System.exit(0);
                     /* Getting Up Path */
                     PP = DijkstraOps.getParsedPath();
                     System.out.println("Up Path");
                     //create queues and flows to UP path
                     for (ParsedPath p : PP) {
                         int prio = r.getPriority();
-                        System.out.println("At Switch "+p.getSwID()+" port Number "+p.getPortNumber());
+                        System.out.println("At Switch " + p.getSwID() + " port Number " + p.getPortNumber());
                         //FUCKIN TRAIN
                         Port trainPort = Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber()));
-                        
+
                         /* Queue */
                         //get qosUUID
                         System.out.println(trainPort);
                         String qosUUID = trainPort.getQosUUID();
-                        System.out.println("Trainport qosUUID= "+qosUUID);
+                        System.out.println("Trainport qosUUID= " + qosUUID);
 
                         //define qos config
                         qc.setOvsid(Constants.ovsID);
@@ -155,8 +165,7 @@ public class ReservationHandler {
                         MyXML.sendPut(true, false, fc);
 
                         //save Flow in db 
-                        fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(),
-                                0, flowCounter);
+                        fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, flowCounter);
                         flowCounter++;
                         fm.setResID(r); //set reservation as FK
                         DB_Manager.addFlow(fm);
@@ -176,7 +185,7 @@ public class ReservationHandler {
 
                         //FUCKIN TRAIN
                         Port trainPort = Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber()));
-                        
+
                         /* Queue */
                         //get qosUUID
                         System.out.println(trainPort);
@@ -196,11 +205,11 @@ public class ReservationHandler {
                         //Save queue in port data structure
                         q = new Queue(Utils.queueUUID, qc.getMinRateQ(), qc.getMaxRateQ(), qc.getPriorityQ());
                         trainPort.addQueue(q);
-                        
+
                         //save in text file
                         pw.println(Utils.queueUUID);
                         pw.flush();
-                        
+
                         //Save Queue in db
                         qm = new QosMap(p.getSwID(), trainPort.getPortID(), trainPort.getPortUUID(), qosUUID, q.getUuid());
                         qm.setResID(r); //set reservation as FK
@@ -215,7 +224,7 @@ public class ReservationHandler {
                         MyXML.sendPut(true, false, fc);
 
                         //save Flow in db 
-                        fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(),0, flowCounter);
+                        fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, flowCounter);
 
                         fm.setResID(r); //set reservation as FK
                         flowCounter++;
@@ -223,8 +232,8 @@ public class ReservationHandler {
 
                     }
                     //edit reservation and set flag "applied" true
-                    r.setApplied(true);
-                    DB_Manager.editReservation(r);
+                    //r.setApplied(true);
+                    //DB_Manager.editReservation(r);
                     System.out.println("Reservation processed successfully!");
                     break;
                 default:

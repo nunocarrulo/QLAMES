@@ -7,7 +7,6 @@ package DB;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -17,7 +16,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -25,7 +23,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author nuno
  */
 @Entity
-@Table(name = "FlowMap")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "FlowMap.findAll", query = "SELECT f FROM FlowMap f"),
@@ -39,19 +36,14 @@ public class FlowMap implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "ID")
     private Integer id;
     @Basic(optional = false)
-    @Column(name = "swID")
     private String swID;
     @Basic(optional = false)
-    @Column(name = "portID")
     private String portID;
     @Basic(optional = false)
-    @Column(name = "tableID")
     private int tableID;
     @Basic(optional = false)
-    @Column(name = "flowID")
     private int flowID;
     @JoinColumn(name = "resID", referencedColumnName = "ID")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -64,15 +56,15 @@ public class FlowMap implements Serializable {
         this.id = id;
     }
 
-    public FlowMap(Integer id, String swID, String portID, int tableID, int flowID) {
-        this.id = id;
+    public FlowMap(String swID, String portID, int tableID, int flowID) {
         this.swID = swID;
         this.portID = portID;
         this.tableID = tableID;
         this.flowID = flowID;
     }
     
-    public FlowMap(String swID, String portID, int tableID, int flowID) {
+    public FlowMap(Integer id, String swID, String portID, int tableID, int flowID) {
+        this.id = id;
         this.swID = swID;
         this.portID = portID;
         this.tableID = tableID;
@@ -149,7 +141,7 @@ public class FlowMap implements Serializable {
 
     @Override
     public String toString() {
-        return "test.FlowMap[ id=" + id + " ]";
+        return "DB.FlowMap[ id=" + id + " ]";
     }
     
 }

@@ -20,7 +20,9 @@ public class TopoNode implements ITopoNode {
     private List<NodeCon> nodeCons;
     private List<Port> ports;
     private boolean isHost;
-
+    private int flowID = 10;
+    private int flowPrio = 10;  //increment for each reservation
+    
     public TopoNode() {
         nodeCons = new ArrayList<>();
         ports = new ArrayList<>();
@@ -90,6 +92,7 @@ public class TopoNode implements ITopoNode {
         
     }
     
+    @Override
     public Port getPortByNumber(int portNumber) {
         
         for(Port port : ports){
@@ -109,6 +112,13 @@ public class TopoNode implements ITopoNode {
                 return nc.getFrom();
         }
         return "";
+    }
+    
+    @Override
+    public int getAndIncFlowID() {
+        int ret = flowID;
+        flowID++;
+        return ret;
     }
     
     /* Setter and Getters */
@@ -143,6 +153,22 @@ public class TopoNode implements ITopoNode {
 
     public String getMac() {
         return mac;
+    }
+    
+    public int getFlowID() {
+        return flowID;
+    }
+
+    public void setFlowID(int flowID) {
+        this.flowID = flowID;
+    }
+
+    public int getFlowPrio() {
+        return flowPrio;
+    }
+
+    public void setFlowPrio(int flowPrio) {
+        this.flowPrio = flowPrio;
     }
 
 }

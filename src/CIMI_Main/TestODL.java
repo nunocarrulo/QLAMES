@@ -30,8 +30,13 @@ public class TestODL {
     private static String lol;
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
+        
         MyJson.setCredentials("admin", "admin");    // json
-        String ovsid = "192.168.57.102:44926";
+        /* Getting Ovs Node Id info */
+        MyJson.sendGet(Constants.node, null);
+        String ovsid = Constants.ovsID;
+        
+        System.out.println("-----------------DELETING QOS ROWS----------------------");
         try (BufferedReader br = new BufferedReader(new FileReader("qosUUID.txt"))) {
             String line;
             while ((line = br.readLine()) != null) {
@@ -40,11 +45,17 @@ public class TestODL {
                 MyJson.sendDelete(Constants.qos, qc);
             }
         }
-
+        System.out.println("-----------------DELETING QUEUE ROWS--------------------");
+        try (BufferedReader br = new BufferedReader(new FileReader("queueUUID.txt"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                System.out.println(line);
+                QosConfig qc = new QosConfig(ovsid, "", line);
+                MyJson.sendDelete(Constants.queue, qc);
+            }
+        }
+        System.out.println("-----------------------DONE-----------------------------");
         System.exit(0);
-        jsonReqQos();
-        jsonReqQueue();
-        System.out.println("DONE!");
 
     }
 

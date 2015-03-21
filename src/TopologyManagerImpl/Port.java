@@ -14,7 +14,7 @@ import java.util.List;
  *
  * @author nuno
  */
-public class Port implements IPort{
+public class Port implements IPort {
 
     private String portID;
     private String portUUID;
@@ -22,45 +22,49 @@ public class Port implements IPort{
     private List<Queue> queues;
     private long bwCap;
     private long currBwLoad;
+    private int numberCounter = 0;
 
-    
-    public Port(){
+    public Port() {
         queues = new ArrayList<>();
     }
-    
+
     @Override
     public boolean addQueue(Queue q) {
-        if(!queues.contains(q)){
+        if (!queues.contains(q)) {
             queues.add(q);
-            return true; 
-        }
-        else{
+            return true;
+        } else {
             System.out.println("Queue already exists on this port.");
             return false;
         }
-            
+
     }
 
     @Override
     public boolean delQueue(String qUUID) {
 
-        for(Queue q : queues){
-            if(q.getUuid().equals(qUUID)){
-               queues.remove(q);
-               System.out.println("Queue: "+qUUID+" removed successfully");
-               return true;
+        for (Queue q : queues) {
+            if (q.getUuid().equals(qUUID)) {
+                queues.remove(q);
+                System.out.println("Queue: " + qUUID + " removed successfully");
+                return true;
             }
         }
-        System.out.println("Queue: "+qUUID+" not found in Port: "+portID);
+        System.out.println("Queue: " + qUUID + " not found in Port: " + portID);
         return false;
-       
+
     }
-    
+
+    public int incAndGetNumberCounter() {
+        numberCounter++;
+        return numberCounter;
+    }
+
     @Override
-    public String toString(){
-        return ("PortID: "+portID+" PortUUID: "+portUUID+" QosUUID: "+qosUUID);
+    public String toString() {
+        return ("PortID: " + portID + " PortUUID: " + portUUID + " QosUUID: " + qosUUID);
     }
-    
+
     @Override
     public String getPortUUID() {
         return portUUID;
@@ -70,7 +74,7 @@ public class Port implements IPort{
     public void setPortUUID(String portUUID) {
         this.portUUID = portUUID;
     }
-    
+
     @Override
     public void setPort(String portid) {
         this.portID = portid;
@@ -107,6 +111,7 @@ public class Port implements IPort{
     public long getBwCap() {
         return bwCap;
     }
+
     public String getQosUUID() {
         return qosUUID;
     }
@@ -117,6 +122,18 @@ public class Port implements IPort{
 
     public long getCurrBwLoad() {
         return currBwLoad;
+    }
+
+    public int getNumberCounter() {
+        return numberCounter;
+    }
+
+    public void setNumberCounter(int numberCounter) {
+        this.numberCounter = numberCounter;
+    }
+
+    public List<Queue> getQueues() {
+        return queues;
     }
 
 }

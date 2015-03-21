@@ -10,6 +10,7 @@ package OVS;
  * @author nuno
  */
 public class Queue {
+    private int number;
     private String uuid;
     private int maxRate;
     private int minRate;
@@ -67,6 +68,14 @@ public class Queue {
 
     public int getPriority() {
         return priority;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+    public void setNumber(int number) {
+        this.number = number;
     }
     
 }

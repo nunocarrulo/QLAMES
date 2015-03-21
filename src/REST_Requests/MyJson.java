@@ -7,9 +7,11 @@ package REST_Requests;
 
 import CIMI_Main.Main;
 import CIMI_Main.TestODL;
+import OVS.Queue;
 import static REST_Requests.BaseURLs.urlOvsReplacer;
 import static REST_Requests.BaseURLs.urlQReplacer;
 import static REST_Requests.BaseURLs.urlQosReplacer;
+import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
 import TopologyManagerUtils.Utils;
 import java.io.BufferedReader;
@@ -17,7 +19,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -256,7 +257,7 @@ public class MyJson {
                 }
                 return false;
             }
-            
+
             /* READ UUID */
             BufferedReader streamReader = new BufferedReader(new InputStreamReader(jsonIS, "UTF-8"));
             StringBuilder responseStrBuilder = new StringBuilder();
@@ -268,14 +269,121 @@ public class MyJson {
             if (debug) {
                 System.out.println(responseStrBuilder.toString());
             }
-            
-            if(queue){
+
+            if (queue) {
                 //saving in a temp static var to be stored on queue data structure
                 Utils.setQueueUUID(responseStrBuilder.toString());
-            }else{
+            } else {
                 //saving in a temp static var to be stored on topo data structure
                 Utils.setQosUUID(responseStrBuilder.toString());
             }
+        } catch (Exception e) {
+            System.out.println("LOLException " + e);
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+
+        // Success
+        return true;
+    }
+
+    public static boolean sendPut(int type, QosConfig qc, Port port) {
+
+        JSONObject data;
+
+        data = updateQos(port);
+
+        if (data == null) {
+            return false;
+        }
+
+        URL url;
+        HttpURLConnection connection = null;
+        String restURL = new String();
+        try {
+
+            switch (type) {
+                case 1:
+                    // put queue info
+                    //restURL = urlOvsReplacer(BaseURLs.postQueue, qc.getOvsid());
+                    break;
+                case 2:
+                    // post qos info
+                    restURL = urlQosReplacer(BaseURLs.putQos, qc.getOvsid(), qc.getQosuuid());
+                    break;
+
+                default:
+                    System.out.println("Undefined type, nothing will be done with request");
+            }
+
+            url = new URL(restURL);
+
+            // Create authentication string and encode it to Base64
+            String authStr = user + ":" + password;
+            String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
+
+            // Create Http connection
+            System.out.println("Opening connection...");
+            connection = (HttpURLConnection) url.openConnection();
+
+            if (debug) {
+                System.setProperty("http.proxyHost", "localhost");
+                System.setProperty("http.proxyPort", "8888");
+            }
+            // Set connection properties
+            connection.setRequestMethod("PUT");
+            connection.setRequestProperty("Authentication", "Basic");
+            connection.setRequestProperty("Authorization", "Basic " + encodedAuthStr);
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setRequestProperty("Accept", "application/json");
+            //connection.setUseCaches(false);
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            System.out.println("Setting connection properties and data...");
+
+            if (debug) {
+                System.out.println("Request: " + data.toString());
+            }
+
+            try ( // Set data to send and close channel
+                    DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
+                os.writeBytes(data.toString());
+                os.flush();
+            }
+
+            if (debug) {
+                System.out.println("Request Send. \nWaiting for response...");
+            }
+
+            // Get the response code
+            InputStream jsonIS = connection.getInputStream();
+
+            int status = connection.getResponseCode();
+            if (debug) {
+                System.out.println("Status: " + status);
+            }
+
+            if (status != Constants.OK) {
+                System.out.println("MyJson: Error updating QoS row. Status: " + status);
+                return false;
+            }
+
+            /* Read response */
+            BufferedReader streamReader = new BufferedReader(new InputStreamReader(jsonIS, "UTF-8"));
+            StringBuilder responseStrBuilder = new StringBuilder();
+
+            String inputStr;
+            while ((inputStr = streamReader.readLine()) != null) {
+                responseStrBuilder.append(inputStr);
+            }
+            if (debug) {
+                System.out.println(responseStrBuilder.toString());
+            }
+            if(!responseStrBuilder.toString().toLowerCase().equals("success"))
+                return false;
+            
         } catch (Exception e) {
             System.out.println("LOLException " + e);
         } finally {
@@ -306,8 +414,9 @@ public class MyJson {
                     System.out.println("Undefined type to delete, nothing will be done with request");
                     return false;
             }
-            if(debug)
-                System.out.println("RestURL: "+restURL);
+            if (debug) {
+                System.out.println("RestURL: " + restURL);
+            }
             url = new URL(restURL);
             // Create authentication string and encode it to Base64
             String authStr = user + ":" + password;
@@ -329,7 +438,6 @@ public class MyJson {
 
             // Get the response from connection's inputStream
             //InputStream xml = connection.getInputStream();
-
             int status = connection.getResponseCode();
             if (true) {
                 System.out.println("Status: " + status);
@@ -384,7 +492,6 @@ public class MyJson {
             data.put("row", row);   //incorporate row on root
 
             //System.out.println("Request print\n" + data.toString());
-
             return data;
         } catch (JSONException ex) {
             System.out.println("Exception " + ex);
@@ -428,6 +535,48 @@ public class MyJson {
             Logger.getLogger(TestODL.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
+    }
+
+    public static JSONObject updateQos(Port port) {
+        JSONObject data = null;
+        try {
+            data = new JSONObject();
+
+            JSONObject row = new JSONObject();
+            JSONObject qos = new JSONObject();
+            JSONArray mapIntUUID;       // <int,uuid>
+            JSONArray others = new JSONArray();
+            JSONArray uuid;
+
+            for (Queue q : port.getQueues()) {
+                // UUID definition
+                uuid = new JSONArray();           // uuid array
+                uuid.put("uuid");
+                uuid.put(q.getUuid());
+
+                // Map <int,UUID>
+                mapIntUUID = new JSONArray();       // <int,uuid>
+                mapIntUUID.put(q.getNumber());
+                mapIntUUID.put(uuid);
+                // Several maps (one per queue)
+                others.put(mapIntUUID);
+            }
+            // Map Encapsulation
+            JSONArray mapArray = new JSONArray();
+            mapArray.put("map");
+
+            mapArray.put(others);            //incorporate other queue map<int,uuid> values array
+            qos.put("queues", mapArray);    //incorporate queues on qos row
+            row.put("QoS", qos);            //incorporate qos on row
+            data.put("row", row);           //incorporate row on root
+
+            //System.out.println("Request print\n" + data.toString());
+            return data;
+        } catch (JSONException ex) {
+            System.out.println("Exception " + ex);
+            Logger.getLogger(TestODL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return data;
     }
 
 }

@@ -42,7 +42,7 @@ public class DB_Manager {
         if (debug) {
             System.out.println("Printing existing Reservations ...");
             for (Reservation r : resList) {
-                System.out.println("ID =" + r.getId() + " sourceIP = " + r.getSrcIP() + " dstIP = " + r.getDstIP());
+                System.out.println("ID = " + r.getId() + " sourceIP = " + r.getSrcIP() + " dstIP = " + r.getDstIP());
             }
         }
         return resList;
@@ -88,6 +88,32 @@ public class DB_Manager {
         resCtl.create(r);
     }
     
+    public static void deleteQosMapEntries(int resID){
+
+        qos = qmCtl.findQosMapEntities();
+        for(QosMap q : qos){
+            if(q.getResID().getId() == resID)
+                try {
+                    qmCtl.destroy(q.getId());
+            } catch (NonexistentEntityException ex) {
+                Logger.getLogger(DB_Manager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    public static void deleteFlowMapEntries(int resID){
+
+        flow = fmCtl.findFlowMapEntities();
+        for(FlowMap f : flow){
+            if(f.getResID().getId() == resID)
+                try {
+                    fmCtl.destroy(f.getId());
+            } catch (NonexistentEntityException ex) {
+                Logger.getLogger(DB_Manager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
     public static void deleteReservation(int resId){
         try {
             resCtl.destroy(resId);
@@ -110,7 +136,7 @@ public class DB_Manager {
     }
 
     public static void prepareDB() {
-        emf = javax.persistence.Persistence.createEntityManagerFactory("lol");
+        emf = javax.persistence.Persistence.createEntityManagerFactory("hi");
         em = emf.createEntityManager();
         resCtl = new ReservationJpaController(emf);
         fmCtl = new FlowMapJpaController(emf);

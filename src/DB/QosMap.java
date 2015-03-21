@@ -7,7 +7,6 @@ package DB;
 
 import java.io.Serializable;
 import javax.persistence.Basic;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -17,7 +16,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -25,7 +23,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author nuno
  */
 @Entity
-@Table(name = "QosMap")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "QosMap.findAll", query = "SELECT q FROM QosMap q"),
@@ -40,22 +37,16 @@ public class QosMap implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "ID")
     private Integer id;
     @Basic(optional = false)
-    @Column(name = "swID")
     private String swID;
     @Basic(optional = false)
-    @Column(name = "portID")
     private String portID;
     @Basic(optional = false)
-    @Column(name = "portUUID")
     private String portUUID;
     @Basic(optional = false)
-    @Column(name = "qosUUID")
     private String qosUUID;
     @Basic(optional = false)
-    @Column(name = "queueUUID")
     private String queueUUID;
     @JoinColumn(name = "resID", referencedColumnName = "ID")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -68,15 +59,16 @@ public class QosMap implements Serializable {
         this.id = id;
     }
 
-    public QosMap(Integer id, String swID, String portID, String portUUID, String qosUUID, String queueUUID) {
-        this.id = id;
+    public QosMap(String swID, String portID, String portUUID, String qosUUID, String queueUUID) {
         this.swID = swID;
         this.portID = portID;
         this.portUUID = portUUID;
         this.qosUUID = qosUUID;
         this.queueUUID = queueUUID;
     }
-    public QosMap( String swID, String portID, String portUUID, String qosUUID, String queueUUID) {
+    
+    public QosMap(Integer id, String swID, String portID, String portUUID, String qosUUID, String queueUUID) {
+        this.id = id;
         this.swID = swID;
         this.portID = portID;
         this.portUUID = portUUID;
@@ -162,7 +154,7 @@ public class QosMap implements Serializable {
 
     @Override
     public String toString() {
-        return "test.QosMap[ id=" + id + " ]";
+        return "DB.QosMap[ id=" + id + " ]";
     }
     
 }

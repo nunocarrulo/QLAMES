@@ -5,6 +5,8 @@
  */
 package DB;
 
+import DB.exceptions.IllegalOrphanException;
+import DB.exceptions.NonexistentEntityException;
 import java.io.Serializable;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
@@ -15,8 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
-import DB.exceptions.IllegalOrphanException;
-import DB.exceptions.NonexistentEntityException;
 
 /**
  *

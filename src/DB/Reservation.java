@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -19,7 +18,6 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -30,7 +28,6 @@ import javax.xml.bind.annotation.XmlTransient;
  * @author nuno
  */
 @Entity
-@Table(name = "Reservation")
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Reservation.findAll", query = "SELECT r FROM Reservation r"),
@@ -41,41 +38,34 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Reservation.findByMinBW", query = "SELECT r FROM Reservation r WHERE r.minBW = :minBW"),
     @NamedQuery(name = "Reservation.findByMaxBW", query = "SELECT r FROM Reservation r WHERE r.maxBW = :maxBW"),
     @NamedQuery(name = "Reservation.findByStartDate", query = "SELECT r FROM Reservation r WHERE r.startDate = :startDate"),
-    @NamedQuery(name = "Reservation.findByEndDate", query = "SELECT r FROM Reservation r WHERE r.endDate = :endDate")})
+    @NamedQuery(name = "Reservation.findByEndDate", query = "SELECT r FROM Reservation r WHERE r.endDate = :endDate"),
+    @NamedQuery(name = "Reservation.findByApplied", query = "SELECT r FROM Reservation r WHERE r.applied = :applied")})
 public class Reservation implements Serializable {
-    @Basic(optional = false)
-    private boolean applied;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "ID")
     private Integer id;
     @Basic(optional = false)
-    @Column(name = "srcIP")
     private String srcIP;
     @Basic(optional = false)
-    @Column(name = "dstIP")
     private String dstIP;
     @Basic(optional = false)
-    @Column(name = "priority")
     private int priority;
     @Basic(optional = false)
-    @Column(name = "minBW")
     private int minBW;
-    @Column(name = "maxBW")
-    private int maxBW;
+    private Integer maxBW;
     @Basic(optional = false)
-    @Column(name = "startDate")
     @Temporal(TemporalType.TIMESTAMP)
     private Date startDate;
     @Basic(optional = false)
-    @Column(name = "endDate")
     @Temporal(TemporalType.TIMESTAMP)
     private Date endDate;
-    @OneToMany(cascade = {CascadeType.REFRESH, CascadeType.REMOVE}, mappedBy = "resID", fetch = FetchType.LAZY)
+    @Basic(optional = false)
+    private boolean applied;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "resID", fetch = FetchType.LAZY)
     private Collection<QosMap> qosMapCollection;
-    @OneToMany(cascade = {CascadeType.REFRESH, CascadeType.REMOVE}, mappedBy = "resID", fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "resID", fetch = FetchType.LAZY)
     private Collection<FlowMap> flowMapCollection;
 
     public Reservation() {
@@ -104,7 +94,7 @@ public class Reservation implements Serializable {
         this.endDate = endDate;
     }
     
-    public Reservation(Integer id, String srcIP, String dstIP, int priority, int minBW, Date startDate, Date endDate) {
+    public Reservation(Integer id, String srcIP, String dstIP, int priority, int minBW, Date startDate, Date endDate, boolean applied) {
         this.id = id;
         this.srcIP = srcIP;
         this.dstIP = dstIP;
@@ -112,6 +102,7 @@ public class Reservation implements Serializable {
         this.minBW = minBW;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.applied = applied;
     }
 
     public Integer getId() {
@@ -154,11 +145,11 @@ public class Reservation implements Serializable {
         this.minBW = minBW;
     }
 
-    public int getMaxBW() {
+    public Integer getMaxBW() {
         return maxBW;
     }
 
-    public void setMaxBW(int maxBW) {
+    public void setMaxBW(Integer maxBW) {
         this.maxBW = maxBW;
     }
 
@@ -176,6 +167,14 @@ public class Reservation implements Serializable {
 
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
+    }
+
+    public boolean getApplied() {
+        return applied;
+    }
+
+    public void setApplied(boolean applied) {
+        this.applied = applied;
     }
 
     @XmlTransient
@@ -218,15 +217,7 @@ public class Reservation implements Serializable {
 
     @Override
     public String toString() {
-        return "test.Reservation[ id=" + id + " ]";
-    }
-
-    public boolean getApplied() {
-        return applied;
-    }
-
-    public void setApplied(boolean applied) {
-        this.applied = applied;
+        return "DB.Reservation[ id=" + id + " ]";
     }
     
 }

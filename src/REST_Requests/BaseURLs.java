@@ -29,6 +29,8 @@ public class BaseURLs {
     public static final String getPorts = "http://192.168.57.1:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/port/rows";
     public static final String getQos = "http://192.168.57.1:8080/ovsdb/nb/v2/node/<ovsid>/tables/qos/rows";
     public static final String getQueue = "http://192.168.57.1:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/queue/rows";
+    /* PUT */
+    public static final String putQos = "http://localhost:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/QoS/rows/<qosuuid>";
     /* POSTS */
     public static final String postQos = "http://localhost:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/QoS/rows";
     public static final String postQueue = "http://192.168.57.1:8080/ovsdb/nb/v2/node/OVS/<ovsid>/tables/queue/rows";
