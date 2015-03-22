@@ -38,6 +38,14 @@ public class Queue {
         this.priority = priority;
     }
 
+    public Queue(int number, String uuid, int minRate, int maxRate, int priority) {
+        this.number = number;
+        this.uuid = uuid;
+        this.maxRate = maxRate;
+        this.minRate = minRate;
+        this.priority = priority;
+    }
+
     public void setUuid(String uuid) {
         this.uuid = uuid;
     }

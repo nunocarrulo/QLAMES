@@ -63,6 +63,12 @@ public class QosConfig {
         this.minRateQ = minR;
         this.maxRateQ = maxR;
     }
+    public void setQQosConfig(String qUUID, int priority, int minR, int maxR){
+        this.queueuuid = qUUID;
+        this.priorityQ = priority;
+        this.minRateQ = minR;
+        this.maxRateQ = maxR;
+    }
     
     public String getOvsid() {
         return ovsid;

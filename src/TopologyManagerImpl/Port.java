@@ -55,7 +55,7 @@ public class Port implements IPort {
 
     }
 
-    public int incAndGetNumberCounter() {
+    public int getNextNumberCounter() {
         numberCounter++;
         return numberCounter;
     }
