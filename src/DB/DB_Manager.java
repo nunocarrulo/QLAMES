@@ -7,7 +7,6 @@ package DB;
 
 import DB.exceptions.IllegalOrphanException;
 import DB.exceptions.NonexistentEntityException;
-import static DB.test.res;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -34,9 +33,6 @@ public class DB_Manager {
     
     public static List<Reservation> getReservations() {
         
-        //EntityManagerFactory emf = javax.persistence.Persistence.createEntityManagerFactory("lol");
-        //EntityManager em = emf.createEntityManager();
-        //res = new ReservationJpaController(emf);
         resList = resCtl.findReservationEntities();
         
         if (debug) {

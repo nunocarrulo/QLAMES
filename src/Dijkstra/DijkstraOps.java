@@ -154,7 +154,7 @@ public class DijkstraOps {
         boolean foundDst = false;
         
         for (Vertex vertice : vertices) {
-            //System.out.println("DijktraOps: Vertice="+vertice.name+" Source= "+Utils.topo.getHostByIP(source)+" target "+Utils.topo.getHostByIP(dest));
+            System.out.println("DijktraOps: Vertice="+vertice.name+" Source= "+Utils.topo.getHostByIP(source)+" target "+Utils.topo.getHostByIP(dest));
             
             if (Utils.topo.getHostByIP(source).equals(vertice.name)) {
                 src = vertice;

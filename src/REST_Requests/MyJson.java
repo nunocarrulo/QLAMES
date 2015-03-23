@@ -37,7 +37,7 @@ public class MyJson {
 
     private static String user = new String();
     private static String password = new String();
-    private static boolean debug = false;
+    private static boolean debug = true;
 
     public static void setCredentials(String username, String pass) {
         user = username;
@@ -303,7 +303,7 @@ public class MyJson {
         HttpURLConnection connection = null;
         String restURL = new String();
         try {
-
+            
             switch (type) {
                 case 1:
                     // put queue info
@@ -323,12 +323,12 @@ public class MyJson {
             // Create authentication string and encode it to Base64
             String authStr = user + ":" + password;
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
-
+            
             // Create Http connection
             System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
-            if (debug) {
+            if (false) {
                 System.setProperty("http.proxyHost", "localhost");
                 System.setProperty("http.proxyPort", "8888");
             }
@@ -346,7 +346,7 @@ public class MyJson {
             if (debug) {
                 System.out.println("Request: " + data.toString());
             }
-
+            
             try ( // Set data to send and close channel
                     DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
                 os.writeBytes(data.toString());
@@ -356,7 +356,7 @@ public class MyJson {
             if (debug) {
                 System.out.println("Request Send. \nWaiting for response...");
             }
-
+            
             // Get the response code
             InputStream jsonIS = connection.getInputStream();
 
@@ -385,7 +385,7 @@ public class MyJson {
                 return false;
             
         } catch (Exception e) {
-            System.out.println("LOLException " + e);
+            System.out.println("MyJson: Exception " + e);
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -513,10 +513,10 @@ public class MyJson {
             priority.put(Integer.toString(qc.getPriorityQ()));
             JSONArray minrateArray = new JSONArray();      //maxrate array
             minrateArray.put("min-rate");
-            minrateArray.put(Integer.toString(qc.getMinRateQ()).concat("000000").trim());                   //define max rate value
+            minrateArray.put(Integer.toString(qc.getMinRateQ()).concat("000").trim());                   //define max rate value
             JSONArray maxrateArray = new JSONArray();      //maxrate array
             maxrateArray.put("max-rate");
-            maxrateArray.put(Integer.toString(qc.getMaxRateQ()).concat("000000").trim());                   //define max rate value
+            maxrateArray.put(Integer.toString(qc.getMaxRateQ()).concat("000").trim());                   //define max rate value
             JSONArray optsArray = new JSONArray();
             optsArray.put(priority);
             optsArray.put(minrateArray);
@@ -570,7 +570,7 @@ public class MyJson {
             row.put("QoS", qos);            //incorporate qos on row
             data.put("row", row);           //incorporate row on root
 
-            //System.out.println("Request print\n" + data.toString());
+            System.out.println("Request print\n" + data.toString());
             return data;
         } catch (JSONException ex) {
             System.out.println("Exception " + ex);

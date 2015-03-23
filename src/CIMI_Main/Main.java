@@ -62,7 +62,7 @@ public class Main {
         /* Getting Topology */
         System.out.println("Obtaining network topology...");
         MyXML.sendGet(Constants.topo, null); // requesting topology to controller
-        System.exit(0);
+
         /* Finding paths using Dijkstra algorithm */
         System.out.println("Running Dijkstra algorithm...\n\tConstructing graph...");
         DijkstraOps.createGraph();
@@ -71,52 +71,45 @@ public class Main {
         //srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
         //DijkstraOps.findPath(srcIP, dstIP);
         //System.exit(0);
-        /* Prepare database to write and read */
-        //DB_Manager.prepareDB();
-        /* Initialize reservation parameters */
-        /*srcIP = "10.0.0.1";
-        dstIP = "10.0.0.5";
-        priority = 2;
-        minBW = 20000;
-        maxBW = 30000;
-        calendar = new GregorianCalendar(2015, 2, 19, 11, 0, 0);
-        System.out.println(sdf.format(calendar.getTime()));
-        start = calendar.getTime();
-        calendar = new GregorianCalendar(2015, 2, 19, 21, 30, 0);
-        end = calendar.getTime();
 
-         //DB_Manager.deleteAllReservations();
-        // Add reservation to db 
-        r = new Reservation(srcIP, dstIP, priority, minBW, maxBW, start, end);
-        DB_Manager.addReservation(r);
-        System.out.println("Reservation added!");
-        //DB_Manager.getReservations();
-
-        System.exit(0);*/
-        /* Installing ARP flows */
-        /*if (true) {
-         System.out.println("Installing ARP flow in all switches!");
-         }
-         for (TopoNode tn : Utils.topo.getAllNodes()) {
-         if (tn.isIsHost()) {
-         continue;
-         }
-
-         fc.setFlowConfig(tn.getId(), 0, 4, 4, "", "", Constants.OFLogicalPorts.ALL.name());
-         MyXML.sendPut(false, true, fc);
-
-         }
-         //removeARPFromAll();*/
         /* Getting Ovs Node Id info */
         MyJson.sendGet(Constants.node, null);
         qc.setOvsid(Constants.ovsID);
         System.out.println("OvsID: " + Constants.ovsID);
+
         /* Getting Ovs Port Uuid info */
         qc.setOvsid(Constants.ovsID);
         MyJson.sendGet(Constants.port, qc);
-        //checkPortUUID();
 
-        /* Create and store QoS UUID info in every switch and every port*/
+        /* Add qos rows in every port of every switch */
+        addQoSUUID(qc);
+
+        /* Prepare database to write and read */
+        DB_Manager.prepareDB();
+
+        System.out.println("------------------------------------------------------------------------------");
+        System.out.println("Processing Reservations Loop...");
+        PrintWriter pw = new PrintWriter("queueUUID.txt");
+        /* Poll database entries to check new reservations */
+        while (true) {
+            // Get all reservations
+            resList = DB_Manager.getReservations();
+            // Verify what needs to be done
+            ReservationHandler.process(resList, pw);
+            //break;
+            try {
+                Thread.sleep(10000);                 //1000 milliseconds is one second.
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+
+        }
+        //System.out.println("Done Once!");
+
+    }
+
+    public static void addQoSUUID(QosConfig qc) throws FileNotFoundException {
+
         System.out.println("Adding qosUUID to all ports...");
         PrintWriter out = new PrintWriter("qosUUID.txt");
         for (TopoNode tn : Utils.topo.getAllSwitches()) {
@@ -133,65 +126,39 @@ public class Main {
         }
         out.close();
 
-        /* Prepare database to write and read */
-        DB_Manager.prepareDB();
-
-        /* Initialize reservation parameters */
-        /*srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
-         priority = 2;
-         minBW = 20000000;
-         calendar = new GregorianCalendar(2015, 2, 17, 13, 0, 0);
-         System.out.println(sdf.format(calendar.getTime()));
-         start = calendar.getTime();
-         calendar = new GregorianCalendar(2015, 2, 17, 22, 30, 0);
-         end = calendar.getTime();
-        
-         /* Add reservation to db */
-        /*
-         r = new Reservation(srcIP, dstIP, priority, minBW, start, end);
-         DB_Manager.addReservation(r);
-         System.out.println("Reservation added!");
-         DB_Manager.getReservations();*/
-        System.out.println("------------------------------------------------------------------------------");
-        System.out.println("Processing Reservations Loop...");
-        /* Poll database entries to check new reservations */
-        while (true) {
-            // Get all reservations
-            resList = DB_Manager.getReservations();
-            // Verify what needs to be done
-            ReservationHandler.process(resList);
-            break;
-        }
-        System.out.println("Done Once!");
-
-        /*
-         System.out.println("Done!");
-         System.out.println("Waiting 10 seconds...");
-         try {
-         Thread.sleep(10000);                 //1000 milliseconds is one second.
-         } catch (InterruptedException ex) {
-         Thread.currentThread().interrupt();
-         }
-         System.out.println("Deleting Qos entries from all ports.");
-         /* Remove all qos uuid 
-         qc.clear();
-         removeQosRowsFromAll(qc);        */
-        /* Standalone tests */
-        //fc = new FlowConfig("openflow:1", 0, 125, 125, "10.0.0.1", "10.0.0.2", "2");
-        //fc.setFlowName("LOL");  //optional
-        //String url;
-        //String url = "http://192.168.57.1:8181/restconf/config/opendaylight-inventory:nodes/node/openflow:1/table/0/flow/15";
-        //url = BaseURLs.urlFlowReplacer(BaseURLs.putFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
-        //MyXML.sendPut(url, fc);
-        //url = BaseURLs.urlFlowReplacer(BaseURLs.delFlow, fc.getNodeID(), Integer.toString(fc.getTableID()), Integer.toString(fc.getFlowID()));
-        //MyXML.sendDelete(Constants.flow, fc);
-        //String link = "http://192.168.57.1:8181/restconf/operational/network-topology:network-topology/topology/flow:1/";
     }
 
     public static void testDB() {
         System.out.println("Testing DB stuff...");
         List<Reservation> resList;
+        Reservation r;
+        String srcIP, dstIP;
+        int priority;
+        int minBW, maxBW;
+        Calendar calendar;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
+        Date start, end;
         DB_Manager.prepareDB();
+
+        /* Initialize reservation parameters */
+        srcIP = "10.0.0.1";
+        dstIP = "10.0.0.5";
+        priority = 5;
+        minBW = 20000;
+        maxBW = 30000;
+        calendar = new GregorianCalendar(2015, 2, 23, 11, 0, 0);
+        System.out.println(sdf.format(calendar.getTime()));
+        start = calendar.getTime();
+        calendar = new GregorianCalendar(2015, 2, 23, 15, 20, 0);
+        end = calendar.getTime();
+
+        //DB_Manager.deleteAllReservations();
+        // Add reservation to db 
+        r = new Reservation(srcIP, dstIP, priority, minBW, maxBW, start, end);
+        DB_Manager.addReservation(r);
+        System.out.println("Reservation added!");
+        //DB_Manager.getReservations();
+
         // Get all reservations
         /*resList = DB_Manager.getReservations();
          for (Reservation r : resList) {
@@ -199,17 +166,31 @@ public class Main {
          DB_Manager.editReservation(r);
          System.out.println("Reservation processed successfully!");
          }*/
-        int resID = 1;
+        //int resID = 1;
         //delete the entries associated with reservation
-        DB_Manager.deleteQosMapEntries(resID);
-
+        //DB_Manager.deleteQosMapEntries(resID);
         //delete the entries associated with reservation 
-        DB_Manager.deleteFlowMapEntries(resID);
-
+        //DB_Manager.deleteFlowMapEntries(resID);
         //delete the entry reservation 
-        DB_Manager.deleteReservation(resID);
-
+        //DB_Manager.deleteReservation(resID);
         System.exit(0);
+    }
+
+    public static void addARPToAll() {
+        /* Installing ARP flows */
+        FlowConfig fc = new FlowConfig();
+        System.out.println("Installing ARP flow in all switches!");
+
+        for (TopoNode tn : Utils.topo.getAllNodes()) {
+            if (tn.isIsHost()) {
+                continue;
+            }
+
+            fc.setFlowConfig(tn.getId(), 0, 4, 4, "", "", Constants.OFLogicalPorts.ALL.name());
+            MyXML.sendPut(false, true, fc);
+
+        }
+        //removeARPFromAll();*/
     }
 
     public static void removeARPFromAll() {

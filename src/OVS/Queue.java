@@ -86,4 +86,9 @@ public class Queue {
         this.number = number;
     }
     
+    @Override
+    public String toString(){
+        return ("QueueUUID: "+uuid+" number: "+number+" minRate: "+minRate+ " maxRate: "+maxRate+" priority "+priority);
+    }
+    
 }

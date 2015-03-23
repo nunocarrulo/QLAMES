@@ -18,6 +18,7 @@ import REST_Requests.MyXML;
 import TopologyManagerImpl.FlowConfig;
 import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
+import TopologyManagerImpl.TopoNode;
 import TopologyManagerUtils.Utils;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -44,11 +45,9 @@ public class ReservationHandler {
     private static final QosConfig qc = new QosConfig();
     private static final FlowConfig fc = new FlowConfig();
     private static String srcHostId, dstHostId;
-    private static int flowCounter = 10;
-    private static int queueCounterID = 1;
 
-    public static void process(List<Reservation> resList) throws FileNotFoundException {
-        PrintWriter pw = new PrintWriter("queueUUID.txt");
+    public static void process(List<Reservation> resList, PrintWriter pw) throws FileNotFoundException {
+        //PrintWriter pw = new PrintWriter("queueUUID.txt");
         /* Retrieving actual time */
         now = new Date();
         //Clearing config data structure just in case
@@ -77,6 +76,18 @@ public class ReservationHandler {
                     //delete all queues on the switches
                     for (QosMap q : qosList) {
                         qc.setQueueuuid(q.getQueueUUID());
+                        qc.setQosuuid(q.getQosUUID());
+                        //deleting queue from port
+                        Port trainPort = Utils.topo.getNode(q.getSwID()).getPort(q.getPortID());
+                        trainPort.delQueue(qc.getQueueuuid());
+                        //updating Qos row
+                        //send Request to map Queues in Qos rows of each port & switch
+                        if (MyJson.sendPut(Constants.qos, qc, trainPort)) {
+                            System.out.println("RH: Put sent successfully!");
+                        } else {
+                            System.out.println("RH: Put failed!");
+                        }
+                        //safely delete Queue
                         MyJson.sendDelete(Constants.queue, qc);
                     }
 
@@ -120,11 +131,14 @@ public class ReservationHandler {
                     DB_Manager.editReservation(r);
                     //System.exit(0);
 
-                    upPathDefinition(r);
+                    upPathDefinition(r, pw);
 
                     downPathDefinition(r, pw);
 
                     System.out.println("Reservation processed successfully!");
+
+                    checkPortQueues();
+
                     break;
                 default:
                     System.out.println("Error processing dates!");
@@ -144,7 +158,7 @@ public class ReservationHandler {
         }
     }
 
-    private static void upPathDefinition(Reservation r) {
+    private static void upPathDefinition(Reservation r, PrintWriter pw) {
         /* Getting Up Path */
         PP = DijkstraOps.getParsedPath();
         System.out.println("Up Path");
@@ -168,7 +182,7 @@ public class ReservationHandler {
 
             //send queue config to ovsdb
             if (MyJson.sendPost(true, Constants.queue, qc)) {
-                System.out.println("RH: Post send successfully!");
+                System.out.println("RH: Post sent successfully!");
             } else {
                 System.out.println("RH: Post failed!");
             }
@@ -177,6 +191,17 @@ public class ReservationHandler {
             q = new Queue(trainPort.getNextNumberCounter(), Utils.queueUUID, qc.getMinRateQ(), qc.getMaxRateQ(), qc.getPriorityQ());
             trainPort.addQueue(q);
 
+            //send Request to map Queues in Qos rows of each port & switch
+            if (MyJson.sendPut(Constants.qos, qc, trainPort)) {
+                System.out.println("RH: Put sent successfully!");
+            } else {
+                System.out.println("RH: Put failed!");
+            }
+
+            //save in text file
+            pw.println(Utils.queueUUID);
+            pw.flush();
+
             //Save Queue in db
             qm = new QosMap(p.getSwID(), trainPort.getPortID(), trainPort.getPortUUID(), qosUUID, q.getUuid());
             qm.setResID(r); //set reservation as FK
@@ -184,15 +209,15 @@ public class ReservationHandler {
 
             /* Flows */
             // create flow config
-            fc.setFlowConfig(p.getSwID(), 0, flowCounter, r.getPriority(), r.getSrcIP(), r.getDstIP(),
+            fc.setFlowConfig(p.getSwID(), 0, Utils.topo.getNode(p.getSwID()).getAndIncFlowID(), r.getPriority(), r.getSrcIP(), r.getDstIP(),
                     p.getPortNumber(), Integer.toString(trainPort.getNumberCounter()));
 
             // send flow to controller and switch
             MyXML.sendPut(true, false, fc);
 
             //save Flow in db 
-            fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, flowCounter);
-            flowCounter++;
+            fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, fc.getFlowID());
+
             fm.setResID(r); //set reservation as FK
             DB_Manager.addFlow(fm);
 
@@ -223,7 +248,7 @@ public class ReservationHandler {
             qc.setOvsid(Constants.ovsID);
             //create queue config
             qc.setQosConfig(qosUUID, r.getPriority(), r.getMinBW(), r.getMaxBW());
-            
+
             //send queue config to ovsdb
             if (MyJson.sendPost(true, Constants.queue, qc)) {
                 System.out.println("RH: Post send successfully!");
@@ -234,6 +259,13 @@ public class ReservationHandler {
             //Save queue in port data structure (including the ID to be mapped in the flow)
             q = new Queue(trainPort.getNextNumberCounter(), Utils.queueUUID, qc.getMinRateQ(), qc.getMaxRateQ(), qc.getPriorityQ());
             trainPort.addQueue(q);
+
+            //send Request to map Queues in Qos rows of each port & switch
+            if (MyJson.sendPut(Constants.qos, qc, trainPort)) {
+                System.out.println("RH: Put sent successfully!");
+            } else {
+                System.out.println("RH: Put failed!");
+            }
 
             //save in text file
             pw.println(Utils.queueUUID);
@@ -246,19 +278,27 @@ public class ReservationHandler {
 
             /* Flows */
             // create flow config
-            fc.setFlowConfig(p.getSwID(), 0, flowCounter, r.getPriority(), r.getDstIP(), r.getSrcIP(),
+            fc.setFlowConfig(p.getSwID(), 0, Utils.topo.getNode(p.getSwID()).getAndIncFlowID(), r.getPriority(), r.getDstIP(), r.getSrcIP(),
                     p.getPortNumber(), Integer.toString(trainPort.getNumberCounter()));
 
             // send flow to controller and switch
             MyXML.sendPut(true, false, fc);
 
             //save Flow in db 
-            fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, flowCounter);
+            fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, fc.getFlowID());
 
             fm.setResID(r); //set reservation as FK
-            flowCounter++;
+
             DB_Manager.addFlow(fm);
 
+        }
+    }
+
+    public static void checkPortQueues() {
+        for (TopoNode n : Utils.topo.getAllSwitches()) {
+            for (Port p : n.getAllPorts()) {
+                System.out.println("Node: " + n.getId() + " Port: " + p.getPortID() + "\t" + p.getQueues().toString());
+            }
         }
     }
 

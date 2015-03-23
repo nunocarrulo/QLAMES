@@ -25,18 +25,6 @@
             <property name="hbm2ddl.auto" value="create"/>
         </properties>-->
   </persistence-unit>
-  <persistence-unit name="lol" transaction-type="RESOURCE_LOCAL">
-    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <class>DB.FlowMap</class>
-    <class>DB.Reservation</class>
-    <class>DB.QosMap</class>
-    <properties>
-      <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/CIMI_DB?zeroDateTimeBehavior=convertToNull"/>
-      <property name="javax.persistence.jdbc.password" value="lol"/>
-      <property name="javax.persistence.jdbc.driver" value="com.mysql.jdbc.Driver"/>
-      <property name="javax.persistence.jdbc.user" value="root"/>
-    </properties>
-  </persistence-unit>
   <persistence-unit name="hi" transaction-type="RESOURCE_LOCAL">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <class>DB.FlowMap</class>

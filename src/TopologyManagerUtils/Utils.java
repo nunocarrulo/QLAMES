@@ -86,7 +86,7 @@ public class Utils {
         }
         // Reading nodes links
         readNodeLinks(doc);
-        solveBug();
+        //solveBug();
         if(true){
             System.out.println("-------------------------------------------------------------------------------------");
             topo.printNodes();
