@@ -7,6 +7,7 @@ package CIMI_Main;
 
 import REST_Requests.Constants;
 import REST_Requests.MyJson;
+import REST_Requests.MyXML;
 import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
 import java.util.logging.Level;
@@ -19,24 +20,29 @@ import org.codehaus.jettison.json.JSONObject;
  *
  * @author nuno
  */
-public class TestJsonPut {
+public class TestJson {
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         QosConfig qc = new QosConfig();
+        /* Credentials set to Rest requests */
+        MyXML.setCredentials("admin", "admin");     // xml
         MyJson.setCredentials("admin", "admin");    // json
-        //define qos config
+        System.out.println("Controller credentials set.");
+
+        /* Getting Topology */
+        System.out.println("Obtaining network topology...");
+        MyXML.sendGet(Constants.topo, null); // requesting topology to controller
+        
+        /* Getting Ovs Node Id info */
+        MyJson.sendGet(Constants.node, null);
         qc.setOvsid(Constants.ovsID);
-        Port trainPort = new Port();
-        trainPort.setPort("openflow10:1");
-        System.out.println("Port queues: "+trainPort.getQueues());
-        if (MyJson.sendPut(Constants.qos, qc, trainPort)) {
-            System.out.println("RH: Put sent successfully!");
-        } else {
-            System.out.println("RH: Put failed!");
-        }
+        MyJson.sendGet(Constants.port, qc); //get interfaces uuids
+        
+        //get interface statistics
+        MyJson.sendGet(Constants.iface, qc);
 
     }
 

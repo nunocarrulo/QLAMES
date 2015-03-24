@@ -11,6 +11,12 @@ import OVS.Queue;
 import static REST_Requests.BaseURLs.urlOvsReplacer;
 import static REST_Requests.BaseURLs.urlQReplacer;
 import static REST_Requests.BaseURLs.urlQosReplacer;
+import static REST_Requests.Constants.bridge;
+import static REST_Requests.Constants.iface;
+import static REST_Requests.Constants.node;
+import static REST_Requests.Constants.port;
+import static REST_Requests.Constants.qos;
+import static REST_Requests.Constants.queue;
 import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
 import TopologyManagerUtils.Utils;
@@ -37,7 +43,7 @@ public class MyJson {
 
     private static String user = new String();
     private static String password = new String();
-    private static boolean debug = true;
+    private static boolean debug = false;
 
     public static void setCredentials(String username, String pass) {
         user = username;
@@ -51,37 +57,42 @@ public class MyJson {
         String restURL = new String();
         String out = new String();
 
-        if (debug) {
+        if (false) {
             System.setProperty("http.proxyHost", "localhost");
             System.setProperty("http.proxyPort", "8888");
         }
         try {
 
             switch (type) {
-                case 1:
+                case queue:
                     // Get queue info
                     out = "Queue";
                     restURL = urlOvsReplacer(BaseURLs.getQueue, qc.getOvsid());
                     break;
-                case 2:
+                case qos:
                     // Get qos info
                     out = "QoS";
                     restURL = urlOvsReplacer(BaseURLs.getQos, qc.getOvsid());
                     break;
-                case 3:
+                case port:
                     // Get port info
                     out = "Port";
                     restURL = urlOvsReplacer(BaseURLs.getPorts, qc.getOvsid());
                     break;
-                case 4:
+                case bridge:
                     // Get bridge info
                     out = "Bridge";
                     restURL = urlOvsReplacer(BaseURLs.getBridges, qc.getOvsid());
                     break;
-                case 5:
+                case node:
                     // Get node info
                     out = "Node";
                     restURL = BaseURLs.getNodes;
+                    break;
+                case iface:
+                    //get interface info
+                    out = "Interface";
+                    restURL = urlOvsReplacer(BaseURLs.getInterfaces, qc.getOvsid());
                     break;
                 default:
                     System.out.println("Undefined type, nothing will be done with request");
@@ -124,28 +135,32 @@ public class MyJson {
 
             /* READ JSON REQUEST !!!*/
             switch (type) {
-                case 1:
+                case queue:
                     // Get queue info
                     // not necessary for now
                     break;
-                case 2:
+                case qos:
                     // Get qos info
                     // not necessary for now
                     break;
-                case 3:
+                case port:
                     // Get port info
                     Utils.decodePortInfo(json);
                     break;
-                case 4:
+                case bridge:
                     // Get bridge info
                     // not necessary for now
                     break;
-                case 5:
+                case node:
                     // Get node info
                     if (debug) {
                         System.out.println(json.getJSONArray("node").getJSONObject(0).get("id").toString());
                     }
                     Constants.ovsID = json.getJSONArray("node").getJSONObject(0).get("id").toString();
+                    break;
+                    
+                case iface:
+                    Utils.decodeIfaceInfo(json);
                     break;
                 default:
                     System.out.println("Undefined type, nothing will be done with request");

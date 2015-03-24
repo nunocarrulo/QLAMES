@@ -22,7 +22,7 @@ public interface IPort {
      * @param portId Unique port identifier
      * @param bwCap Maximum capacity of link (kbps) 
      */
-    public void setPort(String portId, long bwCap);
+    public void setPort(String portId, int bwCap);
     
     /**
      * 
@@ -30,17 +30,17 @@ public interface IPort {
      * @param bwCap Maximum capacity of link (kbps) 
      * @param currLoad Current bandwidth reserved on port
      */
-    public void setPort(String portId, long bwCap, long currLoad);
+    public void setPort(String portId, int bwCap, int currLoad);
     /**
      * 
      * @param currLoad Current bandwidth reserved on port
      */
-    public void updateCurrLoad(long currLoad);
+    public void updateCurrLoad(int currLoad);
     /**
      * 
-     * @return Returns current bandwidth reserved on port
+     * @return Returns current bandwidth (kbps) reserved on port
      */
-    public long getCurrLoad();
+    public int getCurrLoad();
     /**
      * 
      * @param portUUID Unique ovsdb port identifier

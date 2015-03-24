@@ -69,7 +69,7 @@ public class TopoNode implements ITopoNode {
         }
         ret += "\tNodePorts: \n";
         for (int i = 0; i < ports.size(); i++) {
-            ret += "\t\t" + ports.get(i).getPortID() + "\n";
+            ret += "\t\t" + ports.get(i).getPortID() + "\tIface UUID: "+ports.get(i).getIfaceUUID()+"\n";
         }
 
         /* Print addresses if node is a host */

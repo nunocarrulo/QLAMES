@@ -90,21 +90,33 @@ public class Main {
         System.out.println("------------------------------------------------------------------------------");
         System.out.println("Processing Reservations Loop...");
         PrintWriter pw = new PrintWriter("queueUUID.txt");
+        
+        long time=0, lastTime=0;
         /* Poll database entries to check new reservations */
         while (true) {
+            /*
+            time = System.nanoTime();
+            System.out.println(System.nanoTime());
+            if( (time - lastTime) > 950000000  ){    //0.9sec
+                //get interface statistics
+                MyJson.sendGet(Constants.iface, qc);
+            }
+            lastTime = time;
+            */
             // Get all reservations
             resList = DB_Manager.getReservations();
             // Verify what needs to be done
             ReservationHandler.process(resList, pw);
             //break;
-            try {
-                Thread.sleep(10000);                 //1000 milliseconds is one second.
-            } catch (InterruptedException ex) {
-                Thread.currentThread().interrupt();
-            }
+            //try {
+            //    Thread.sleep(10000);                 //1000 milliseconds is one second.
+            //} catch (InterruptedException ex) {
+            //    Thread.currentThread().interrupt();
+            //}
+            break;
 
         }
-        //System.out.println("Done Once!");
+        System.out.println("Done Once!");
 
     }
 
@@ -142,14 +154,14 @@ public class Main {
 
         /* Initialize reservation parameters */
         srcIP = "10.0.0.1";
-        dstIP = "10.0.0.5";
+        dstIP = "10.0.0.2";
         priority = 5;
-        minBW = 20000;
-        maxBW = 30000;
-        calendar = new GregorianCalendar(2015, 2, 23, 11, 0, 0);
+        minBW = 40000;
+        maxBW = 50000;
+        calendar = new GregorianCalendar(2015, 2, 24, 11, 0, 0);
         System.out.println(sdf.format(calendar.getTime()));
         start = calendar.getTime();
-        calendar = new GregorianCalendar(2015, 2, 23, 15, 20, 0);
+        calendar = new GregorianCalendar(2015, 2, 24, 19, 20, 0);
         end = calendar.getTime();
 
         //DB_Manager.deleteAllReservations();

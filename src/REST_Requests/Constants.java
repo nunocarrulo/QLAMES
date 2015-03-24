@@ -24,6 +24,15 @@ public class Constants {
     
     public static String ovsID;
     
+    /* Port State */
+    public static final boolean UP = true;
+    public static final boolean DOWN = false;
+    
+    /* Profiles */
+    public static final int Silver = 1;
+    public static final int Gold = 2;
+    public static final int Platinum = 3;
+    
     /* GET TYPES XML */
     public static final int topo = 1;
     public static final int table = 2;
@@ -35,7 +44,7 @@ public class Constants {
     public static final int port = 3;
     public static final int bridge = 4;
     public static final int node = 5;
-    public static final int linkSpeed = 6;
+    public static final int iface = 6;
     
     /* Ethernet types */
     public static final String ipv4 = "2048";

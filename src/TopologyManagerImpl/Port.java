@@ -6,26 +6,36 @@
 package TopologyManagerImpl;
 
 import ITopologyManager.IPort;
+import OVS.IfaceStatistics;
 import OVS.Queue;
+import static REST_Requests.Constants.UP;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 /**
  *
  * @author nuno
  */
 public class Port implements IPort {
-
+    
     private String portID;
     private String portUUID;
     private String qosUUID;
+    private String ifaceUUID;
     private List<Queue> queues;
-    private long bwCap;
-    private long currBwLoad;
+    private IfaceStatistics iFaceStats;
+    private PriorityQueue txbytesHistory;
+    private int bwCap;
+    private int currBwLoad;
     private int numberCounter = 0;
+    private boolean state;  //true means UP
 
     public Port() {
         queues = new ArrayList<>();
+        iFaceStats = new IfaceStatistics();
+        state = UP;
+        txbytesHistory = new PriorityQueue();
     }
 
     @Override
@@ -81,25 +91,25 @@ public class Port implements IPort {
     }
 
     @Override
-    public void setPort(String portid, long bwCap) {
+    public void setPort(String portid, int bwCap) {
         this.portID = portid;
         this.bwCap = bwCap;
     }
 
     @Override
-    public void setPort(String portid, long bwCap, long currLoad) {
+    public void setPort(String portid, int bwCap, int currLoad) {
         this.portID = portid;
         this.bwCap = bwCap;
         this.currBwLoad = currLoad;
     }
 
     @Override
-    public void updateCurrLoad(long currLoad) {
+    public void updateCurrLoad(int currLoad) {
         currBwLoad = currLoad;
     }
 
     @Override
-    public long getCurrLoad() {
+    public int getCurrLoad() {
         return currBwLoad;
     }
 
@@ -134,6 +144,34 @@ public class Port implements IPort {
 
     public List<Queue> getQueues() {
         return queues;
+    }
+
+    public boolean isState() {
+        return state;
+    }
+
+    public void setState(boolean state) {
+        this.state = state;
+    }
+
+    public String getIfaceUUID() {
+        return ifaceUUID;
+    }
+
+    public void setIfaceUUID(String ifaceUUID) {
+        this.ifaceUUID = ifaceUUID;
+    }
+
+    public IfaceStatistics getiFaceStats() {
+        return iFaceStats;
+    }
+
+    public void setiFaceStats(IfaceStatistics iFaceStats) {
+        this.iFaceStats = iFaceStats;
+    }
+
+    public PriorityQueue getTxbytesHistory() {
+        return txbytesHistory;
     }
 
 }

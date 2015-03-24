@@ -55,6 +55,13 @@ public class ReservationHandler {
         qc.clear();
 
         for (Reservation r : resList) {
+            System.out.println("Reservation "+r.getId());
+            // if flag "applied" is true break
+            //later might be used for load balancing
+            if (r.getApplied()) {
+                System.out.println("RH: Policy already applied!");
+                continue;
+            }
 
             /* Apply actions according to the dates */
             switch (checkDate(now, r.getStartDate(), r.getEndDate())) {
@@ -117,11 +124,6 @@ public class ReservationHandler {
                 case Within:
                     System.out.println("------------------------------------------------------------------------------");
                     System.out.println("WITHIN");
-                    // if flag "applied" is true break
-                    if (r.getApplied()) {
-                        System.out.println("RH: Policy already applied!");
-                        break;
-                    }
 
                     // Apply Dijkstra to find paths between hosts 
                     DijkstraOps.findPath(r.getSrcIP(), r.getDstIP());

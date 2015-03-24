@@ -5,6 +5,7 @@
  */
 package TopologyManagerUtils;
 
+import OVS.IfaceStatistics;
 import TopologyManagerImpl.NodeCon;
 import TopologyManagerImpl.Port;
 import TopologyManagerImpl.TopoNode;
@@ -12,6 +13,11 @@ import TopologyManagerImpl.Topology;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.w3c.dom.Document;
@@ -25,9 +31,19 @@ import org.w3c.dom.NodeList;
  */
 public class Utils {
 
+    public enum StatFields{
+        tx_errors(0), collisions(1), tx_bytes(2), rx_dropped(4), tx_packets(5), 
+        rx_packets(6), tx_dropped(7), rx_errors(10), rx_bytes(11);
+        public int val;
+        StatFields(int val){
+            this.val = val;
+        }
+        
+    }
+    
     private static String[] swPorts;
     public static Topology topo = new Topology();
-    public static final boolean debug = false;
+    public static final boolean debug = true;
     public static String qosUUID;
     public static String queueUUID;
 
@@ -56,15 +72,15 @@ public class Utils {
                     /* Reading termination ports of node and Creating node */
                     topoNode = new TopoNode();
                     List<Port> lol = readTermPoints(e);
-                    if(node_id.equals("openflow:2")){
+                    if (node_id.equals("openflow:2")) {
                         System.out.println("Utils OPENFLOW:2");
-                        for(Port p : lol){
-                            System.out.println("\tPortID= "+p.getPortID());
+                        for (Port p : lol) {
+                            System.out.println("\tPortID= " + p.getPortID());
                         }
                     }
-                    
+
                     topoNode.setNode(node_id, lol);
-                    
+
                     // if node is a host insert ip and mac
                     if (node_id.contains("host:")) {
                         //retrieve ip
@@ -87,74 +103,132 @@ public class Utils {
         // Reading nodes links
         readNodeLinks(doc);
         //solveBug();
-        if(true){
+        if (true) {
             System.out.println("-------------------------------------------------------------------------------------");
             topo.printNodes();
         }
         System.out.println("Done decoding topology...");
         System.out.println("-------------------------------------------------------------------------------------");
     }
+    /*
+     public static void decodePortInfo(JSONObject portJson) throws JSONException {
+
+     Iterator it = portJson.getJSONObject("rows").keys();
+     String sw, port, puuid;
+     String[] swPort;
+     if(debug)
+     System.out.println("-------------------------------Decoding Port UUID-------------------------------");
+     // Get every port uuid and save it on portInfo data structure 
+     while (it.hasNext()) {
+            
+     puuid = it.next().toString();    // get port uuid
+     swPort = portJson.getJSONObject("rows").getJSONObject(puuid).get("name").toString().split("-");
+
+     //if it is a switch pass to next uuid
+     if (swPort.length < 2)
+     continue;
+            
+     sw = "openflow:".concat((swPort[0].substring(1)));
+     port = sw.concat(":").concat(swPort[1].substring(3));
+            
+     if(debug)
+     System.out.println("| Sw: " + sw + " | Port: " + port + " | PortUUID: " + puuid+ " |");
+     // Saving portUUIDs into topo data structure
+     if(topo.nodeExists(sw))
+     if(topo.getNode(sw).getPort(port) != null)
+     topo.getNode(sw).getPort(port).setPortUUID(puuid);
+     else
+     System.out.println("Port "+port+" does not exist!"); 
+     else
+     System.out.println("Node "+sw+" does not exist!");
+            
+     }
+     if(debug)
+     System.out.println("--------------------------------------------------------------------------------");
+
+     }*/
 
     public static void decodePortInfo(JSONObject portJson) throws JSONException {
 
         Iterator it = portJson.getJSONObject("rows").keys();
         String sw, port, puuid;
         String[] swPort;
-        if(debug)
-            System.out.println("-------------------------------Decoding Port UUID-------------------------------");
+        String iface = "";
+        String[] aux = new String[10];
+        if (debug) {
+            System.out.println("-------------------------------Decoding Port and Iface UUID -------------------------------");
+        }
         /* Get every port uuid and save it on portInfo data structure */
         while (it.hasNext()) {
-            
+
             puuid = it.next().toString();    // get port uuid
             swPort = portJson.getJSONObject("rows").getJSONObject(puuid).get("name").toString().split("-");
 
             //if it is a switch pass to next uuid
-            if (swPort.length < 2)
+            if (swPort.length < 2) {
                 continue;
-            
+            }
+
             sw = "openflow:".concat((swPort[0].substring(1)));
             port = sw.concat(":").concat(swPort[1].substring(3));
-            
-            if(debug)
-                System.out.println("| Sw: " + sw + " | Port: " + port + " | PortUUID: " + puuid+ " |");
+
+            //set interface uuid
+            String pattern = "([A-Za-z0-9-]{36})";
+            Pattern p = Pattern.compile(pattern);
+            Matcher m = p.matcher(portJson.getJSONObject("rows").getJSONObject(puuid).get("interfaces").toString());
+            if (m.find()) {
+                iface = m.group(0);
+            } else {
+                System.out.println("Cannot find pattern");
+            }
+
+            if (true) {
+                System.out.println("| Sw: " + sw + " | Port: " + port + " | PortUUID: " + puuid + " | Iface: " + iface);
+            }
             /* Saving portUUIDs into topo data structure*/
-            if(topo.nodeExists(sw))
-                if(topo.getNode(sw).getPort(port) != null)
+            if (topo.nodeExists(sw)) {
+                if (topo.getNode(sw).getPort(port) != null) {
                     topo.getNode(sw).getPort(port).setPortUUID(puuid);
-                else
-                   System.out.println("Port "+port+" does not exist!"); 
-            else
-                System.out.println("Node "+sw+" does not exist!");
-            
+                    topo.getNode(sw).getPort(port).setIfaceUUID(iface);
+                } else {
+                    System.out.println("Port " + port + " does not exist!");
+                }
+            } else {
+                System.out.println("Node " + sw + " does not exist!");
+            }
+
         }
-        if(debug)
+        if (debug) {
             System.out.println("--------------------------------------------------------------------------------");
+        }
 
     }
 
-    public static void setQosUUID(String rcvQosUuid){
-        if(debug)
+    public static void setQosUUID(String rcvQosUuid) {
+        if (debug) {
             System.out.println(rcvQosUuid);
+        }
 
         qosUUID = rcvQosUuid;
     }
-    
+
     public static void setQueueUUID(String queueUUID) {
         Utils.queueUUID = queueUUID;
     }
-    
-    private static void solveBug(){
+
+    private static void solveBug() {
         TopoNode tn = topo.getNode("openflow:1");
-        NodeCon newNc; 
-        for(NodeCon nc : tn.getNodeCon()){
+        NodeCon newNc;
+        for (NodeCon nc : tn.getNodeCon()) {
             newNc = new NodeCon(tn.getId(), nc.getTo(), nc.getFrom());
             topo.getNode(nc.getDstNodeId()).addNodeCon(newNc);
-            if(debug)
-                System.out.println("Adding NodeCon: "+newNc.toString()+" to Node: "+topo.getNode(nc.getDstNodeId()));
+            if (debug) {
+                System.out.println("Adding NodeCon: " + newNc.toString() + " to Node: " + topo.getNode(nc.getDstNodeId()));
+            }
         }
-        
+
     }
-    
+
     private static List<Port> readTermPoints(Element e) {
         // Retrieving switch ports
         NodeList tpList = e.getElementsByTagName("termination-point");
@@ -211,7 +285,7 @@ public class Utils {
                     if (debug) {
                         System.out.println("\tSource: " + srcNode + "\t\t" + srcTp);
                     }
-                    
+
                     // Retrieving destination information
                     Node dst = e.getElementsByTagName("destination").item(0);
                     Element dstElem = (Element) dst;
@@ -225,13 +299,57 @@ public class Utils {
                     /* Adding connection to source node */
                     nCon = new NodeCon();
                     nCon.setConnection(dstNode, srcTp, dstTp);  // create node connection
-                    
+
                     topo.getNode(srcNode).addNodeCon(nCon);     // get source node and add connection to it
 
                 }
             }
         }
     }
+
+    public static void decodeIfaceInfo(JSONObject ifaceJson){
+        long tx_errors, collisions, tx_bytes, rx_dropped, tx_packets,
+            rx_packets, tx_dropped, rx_errors, rx_bytes;
+        JSONArray train; 
+        
+        for(TopoNode tn : Utils.topo.getAllSwitches()){
+            for(Port p : tn.getAllPorts()){
+                
+                try {
+                    train = ifaceJson.getJSONObject("rows").getJSONObject(p.getIfaceUUID()).getJSONArray("statistics").getJSONArray(1);
+                    
+                    //gather the info
+                    collisions = train.getJSONArray(StatFields.collisions.val).getLong(1);
+                    tx_errors = train.getJSONArray(StatFields.tx_errors.val).getLong(1);
+                    tx_bytes = train.getJSONArray(StatFields.tx_bytes.val).getLong(1);
+                    tx_packets = train.getJSONArray(StatFields.tx_packets.val).getLong(1);
+                    tx_dropped = train.getJSONArray(StatFields.tx_dropped.val).getLong(1);
+                    rx_errors = train.getJSONArray(StatFields.rx_errors.val).getLong(1);
+                    rx_bytes = train.getJSONArray(StatFields.rx_bytes.val).getLong(1);
+                    rx_packets = train.getJSONArray(StatFields.rx_packets.val).getLong(1);
+                    rx_dropped = train.getJSONArray(StatFields.rx_dropped.val).getLong(1);
+                    
+                    //update interface statistics on port
+                    p.getiFaceStats().setIfaceStatistics(collisions, rx_bytes, rx_packets, rx_dropped, rx_errors, tx_bytes, tx_packets, tx_dropped, tx_errors);
+                    if( p.getiFaceStats().getTx_bytes() >= p.getiFaceStats().getLastTx_bytes() ){
+                        System.out.println("Curr "+p.getiFaceStats().getTx_bytes()+" Last "+p.getiFaceStats().getLastTx_bytes());
+                        int bw = (int) (((p.getiFaceStats().getTx_bytes() - p.getiFaceStats().getLastTx_bytes())*8)/1000); //kbps
+                        p.updateCurrLoad(bw);
+                    }else{
+                        System.out.println("Last tx bytes < current tx bytes");
+                    }
+                    System.out.println("Switch "+tn.getId()+" Port: "+p.getPortID()+" with iface: "+p.getIfaceUUID()
+                        +" Current Link Load (kbps): "+p.getCurrBwLoad());
+                    
+                    if(debug)
+                        System.out.println(p.getiFaceStats().toString());
+                } catch (JSONException ex) {
+                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
+    }
+    
     
     
 }
