@@ -42,13 +42,14 @@ class Edge {
 
     public final Vertex target;
     public final String link;
-    public final int weight;
+    public int weight;
 
     public Edge(Vertex argTarget, String argLink, int argWeight) {
         target = argTarget;
         link = argLink;
         weight = argWeight;
     }
+    
     @Override
     public String toString(){
         return ("target: "+target+" through "+link);

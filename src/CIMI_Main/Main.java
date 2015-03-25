@@ -9,7 +9,9 @@ import Automation.ReservationHandler;
 import DB.DB_Manager;
 import DB.Reservation;
 import Dijkstra.DijkstraOps;
+import OVS.StatisticsThread;
 import REST_Requests.Constants;
+import static REST_Requests.Constants.applyLoadBalance;
 import REST_Requests.MyJson;
 import REST_Requests.MyXML;
 import TopologyManagerImpl.FlowConfig;
@@ -91,30 +93,19 @@ public class Main {
         System.out.println("Processing Reservations Loop...");
         PrintWriter pw = new PrintWriter("queueUUID.txt");
         
-        long time=0, lastTime=0;
+        //start statistics collector thread
+        if(applyLoadBalance){
+            StatisticsThread st = new StatisticsThread();
+            st.start();
+        }
         /* Poll database entries to check new reservations */
         while (true) {
-            /*
-            time = System.nanoTime();
-            System.out.println(System.nanoTime());
-            if( (time - lastTime) > 950000000  ){    //0.9sec
-                //get interface statistics
-                MyJson.sendGet(Constants.iface, qc);
-            }
-            lastTime = time;
-            */
             // Get all reservations
             resList = DB_Manager.getReservations();
             // Verify what needs to be done
             ReservationHandler.process(resList, pw);
-            //break;
-            //try {
-            //    Thread.sleep(10000);                 //1000 milliseconds is one second.
-            //} catch (InterruptedException ex) {
-            //    Thread.currentThread().interrupt();
-            //}
-            break;
 
+            break;
         }
         System.out.println("Done Once!");
 

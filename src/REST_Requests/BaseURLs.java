@@ -58,7 +58,7 @@ public class BaseURLs {
     }
     
     /* Ovs replacers */
-    public static String urlOvsReplacer(String baseUrl, String ovsid){
+    public synchronized static String urlOvsReplacer(String baseUrl, String ovsid){
        String ret = baseUrl;
        ret = ret.replace("<ovsid>", ovsid);   // Replacing fields 
        return ret;

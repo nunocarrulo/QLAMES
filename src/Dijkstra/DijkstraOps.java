@@ -100,21 +100,13 @@ public class DijkstraOps {
         Vertex vertex;
         Edge edge;
         int index = 0;
-        boolean spf = true;
-        int weight;
-
-        if (spf) {
-            weight = 1;
-        } else {
-            weight = 25;
-        }
+        int weight = 1;
 
         /* Creating vertex */
         for (TopoNode tn : Utils.topo.getAllNodes()) {
             vertex = new Vertex(tn.getId());    //create vertex 
             //System.out.println("TopoNode ID: "+tn.getId());
             vertices.add(vertex);
-            //vertices[index++] = vertex;         //add vertex to list
         }
 
         /* Creating edges for each vertex*/
@@ -262,4 +254,24 @@ public class DijkstraOps {
         return revParsedPath;
     }
 
+    public static void updateEdge(String swID, String portID, int weight){
+        for (Vertex v : vertices){
+            if(v.name.equals(swID)){
+                for(Edge e : v.adjacencies){
+                    if(e.link.equals(portID))
+                        e.weight = weight;
+                }
+            }
+        }
+    }
+    
+    public static void updateAllEdges(){
+        for (Vertex v : vertices){
+            for(Edge e : v.adjacencies){
+                e.weight = Utils.topo.getNode(v.name).getPort(e.link).getCurrLoad();    //average after
+                System.out.println("Node "+v.name+" port "+ e.link + " current load "+e.weight);
+            }
+        }
+    }
+    
 }

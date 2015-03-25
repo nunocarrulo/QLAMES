@@ -10,7 +10,11 @@ package REST_Requests;
  * @author nuno
  */
 public class Constants {
-    /* Pass it to enum later*/
+    
+    public static final Object lol = new Object();
+    public static final double LINK_THRESHOLD = 0.8;    //80%
+    public static final boolean applyLoadBalance = false;
+    
     /* HTTP ERROR CODES */
     public static final int OK = 200;
     public static final int CREATED = 201;

@@ -8,8 +8,8 @@ package CIMI_Main;
 import REST_Requests.Constants;
 import REST_Requests.MyJson;
 import REST_Requests.MyXML;
-import TopologyManagerImpl.Port;
 import TopologyManagerImpl.QosConfig;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.codehaus.jettison.json.JSONArray;
@@ -26,6 +26,7 @@ public class TestJson {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        
         QosConfig qc = new QosConfig();
         /* Credentials set to Rest requests */
         MyXML.setCredentials("admin", "admin");     // xml

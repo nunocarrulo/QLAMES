@@ -6,9 +6,11 @@
 package TopologyManagerImpl;
 
 import ITopologyManager.IPort;
+import OVS.CircularArray;
 import OVS.IfaceStatistics;
 import OVS.Queue;
 import static REST_Requests.Constants.UP;
+import static REST_Requests.Constants.lol;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -18,16 +20,17 @@ import java.util.PriorityQueue;
  * @author nuno
  */
 public class Port implements IPort {
-    
+
     private String portID;
     private String portUUID;
     private String qosUUID;
     private String ifaceUUID;
-    private List<Queue> queues;
+    private final List<Queue> queues;
     private IfaceStatistics iFaceStats;
-    private PriorityQueue txbytesHistory;
+    private final CircularArray currBWHistory;
     private int bwCap;
-    private int currBwLoad;
+    private int linkSpeed; //kbps
+    private int currBwLoad; //kbps
     private int numberCounter = 0;
     private boolean state;  //true means UP
 
@@ -35,7 +38,8 @@ public class Port implements IPort {
         queues = new ArrayList<>();
         iFaceStats = new IfaceStatistics();
         state = UP;
-        txbytesHistory = new PriorityQueue();
+        currBWHistory = new CircularArray(600); //10min = 60*10
+        linkSpeed = 10000000;
     }
 
     @Override
@@ -105,6 +109,7 @@ public class Port implements IPort {
 
     @Override
     public void updateCurrLoad(int currLoad) {
+        currBWHistory.add(currLoad);    //save value to array
         currBwLoad = currLoad;
     }
 
@@ -170,8 +175,16 @@ public class Port implements IPort {
         this.iFaceStats = iFaceStats;
     }
 
-    public PriorityQueue getTxbytesHistory() {
-        return txbytesHistory;
+    public CircularArray getCurrBWHistory() {
+        return currBWHistory;
+    }
+
+    public int getLinkSpeed() {
+        return linkSpeed;
+    }
+
+    public void setLinkSpeed(int linkSpeed) {
+        this.linkSpeed = linkSpeed;
     }
 
 }

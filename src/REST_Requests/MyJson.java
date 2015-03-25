@@ -50,17 +50,13 @@ public class MyJson {
         password = pass;
     }
 
-    public static void sendGet(int type, QosConfig qc) {
+    public synchronized static void sendGet(int type, QosConfig qc) {
 
         URL url;
         HttpURLConnection connection = null;
         String restURL = new String();
         String out = new String();
 
-        if (false) {
-            System.setProperty("http.proxyHost", "localhost");
-            System.setProperty("http.proxyPort", "8888");
-        }
         try {
 
             switch (type) {

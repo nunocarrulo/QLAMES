@@ -31,6 +31,10 @@ public class DB_Manager {
     private static EntityManager em;
     
     
+    public static Reservation getReservation(int resID) {
+        return resCtl.findReservation(resID);
+    }
+    
     public static List<Reservation> getReservations() {
         
         resList = resCtl.findReservationEntities();
