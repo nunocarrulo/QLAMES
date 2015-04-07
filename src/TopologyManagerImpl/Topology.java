@@ -50,7 +50,7 @@ public class Topology implements ITopology{
     }
     
     @Override
-    public List<TopoNode> getAllSwitches() {
+    public synchronized List<TopoNode> getAllSwitches() {
         List<TopoNode> swNodes = new ArrayList<>();
         for(TopoNode tn : nodes){
             if(!tn.isIsHost()){

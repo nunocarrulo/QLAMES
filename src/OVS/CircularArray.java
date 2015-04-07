@@ -17,6 +17,7 @@ public class CircularArray {
     private long average;
     
     public CircularArray(int size) {
+        this.size = size;
         array = new long[size];
         average = index = 0;
     }
@@ -32,6 +33,13 @@ public class CircularArray {
         }
 
         return average;
+    }
+    
+    public long getPrev(){
+        if(index == 0)
+            return array[size-1];
+        else
+            return array[index-1];
     }
 
     public long[] getArray() {

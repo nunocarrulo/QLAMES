@@ -41,21 +41,27 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
 
+        //testDBOrder();
+        //testDBScal();
         //testDB();
+        
         /* Variables and Data structures initialization */
-        FlowConfig fc = new FlowConfig();
-        QosConfig qc = new QosConfig();
-        List<Reservation> resList;
+        /*FlowConfig fc = new FlowConfig();
+        
         Reservation r;
-
+        */
         /* Reservation parameters */
-        String srcIP, dstIP;
+        /*String srcIP, dstIP;
         int priority;
         int minBW, maxBW;
         Calendar calendar;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
         Date start, end;
-
+        */
+        
+        QosConfig qc = new QosConfig();
+        List<Reservation> resList;
+                
         /* Credentials set to Rest requests */
         MyXML.setCredentials("admin", "admin");     // xml
         MyJson.setCredentials("admin", "admin");    // json
@@ -64,7 +70,8 @@ public class Main {
         /* Getting Topology */
         System.out.println("Obtaining network topology...");
         MyXML.sendGet(Constants.topo, null); // requesting topology to controller
-
+        System.exit(0);
+        
         /* Finding paths using Dijkstra algorithm */
         System.out.println("Running Dijkstra algorithm...\n\tConstructing graph...");
         DijkstraOps.createGraph();
@@ -99,15 +106,24 @@ public class Main {
             st.start();
         }
         /* Poll database entries to check new reservations */
+        //long time = System.nanoTime();
         while (true) {
             // Get all reservations
             resList = DB_Manager.getReservations();
             // Verify what needs to be done
             ReservationHandler.process(resList, pw);
-
-            break;
+            
+            try {
+                Thread.sleep(5000);                 //1000 milliseconds is one second.
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+            
+            //break;
         }
-        System.out.println("Done Once!");
+        //long timeEnd = System.nanoTime();
+        //double runTime = (timeEnd - time) / 1000000000.0;
+        //System.out.println("Done Once!\nRuntime: "+runTime+" sec");
 
     }
 
@@ -162,23 +178,77 @@ public class Main {
         System.out.println("Reservation added!");
         //DB_Manager.getReservations();
 
-        // Get all reservations
-        /*resList = DB_Manager.getReservations();
-         for (Reservation r : resList) {
-         r.setApplied(false);
-         DB_Manager.editReservation(r);
-         System.out.println("Reservation processed successfully!");
-         }*/
-        //int resID = 1;
-        //delete the entries associated with reservation
-        //DB_Manager.deleteQosMapEntries(resID);
-        //delete the entries associated with reservation 
-        //DB_Manager.deleteFlowMapEntries(resID);
-        //delete the entry reservation 
-        //DB_Manager.deleteReservation(resID);
         System.exit(0);
     }
 
+    public static void testDBScal() {
+        System.out.println("Testing DB stuff...");
+        List<Reservation> resList;
+        Reservation r;
+        String srcIP, dstIP;
+        int priority;
+        int minBW, maxBW;
+        Calendar calendar;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
+        Date start, end;
+        DB_Manager.prepareDB();
+
+        /* Initialize reservation parameters */
+        String srcIPs[] = {"10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4", "10.0.0.5"};
+        //String srcIPs[] = {"10.0.0.1"};
+        //String dstIPs[] = {"10.0.0.3"};
+        //srcIP = "10.0.0.1";
+        //dstIP = "10.0.0.2";
+        priority = 5;
+        minBW = 40000;
+        maxBW = 50000;
+
+        for (int a = 0; a < 1; a++) {
+            for (int i = 0; i < srcIPs.length; i++) {
+                for (int j = i; j < srcIPs.length; j++) {
+                    if (i == j) {
+                        continue;
+                    }
+                    switch (i) {
+                        case 0:
+                            minBW = 10000;
+                            maxBW = 20000;
+                            break;
+                        case 1:
+                            minBW = 20000;
+                            maxBW = 30000;
+                            break;
+                        case 2:
+                            minBW = 30000;
+                            maxBW = 40000;
+                            break;
+                        case 3:
+                            minBW = 40000;
+                            maxBW = 50000;
+                            break;
+                        case 4:
+                            minBW = 50000;
+                            maxBW = 60000;
+                            break;
+                        default:
+                            System.out.println("DEU MERDA");
+                            break;
+                    }
+                    calendar = new GregorianCalendar(2015, 2, 24, 11, 0, 0);
+                    System.out.println(sdf.format(calendar.getTime()));
+                    start = calendar.getTime();
+                    calendar = new GregorianCalendar(2015, 3, 1, 19, 00, 0);
+                    end = calendar.getTime();
+                    r = new Reservation(srcIPs[i], srcIPs[j], priority, minBW, maxBW, start, end);
+                    DB_Manager.addReservation(r);
+                    System.out.println("Reservation added!");
+                }
+            }
+        }
+
+        System.exit(0);
+    }
+    
     public static void addARPToAll() {
         /* Installing ARP flows */
         FlowConfig fc = new FlowConfig();

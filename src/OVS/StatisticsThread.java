@@ -35,15 +35,10 @@ public class StatisticsThread extends Thread {
          MyJson.sendGet(Constants.iface, qc);
          }
          lastTime = time;*/
-        try {
-            Thread.sleep(10000);                 //1000 milliseconds is one second.
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
 
         while (true) {
             try {
-                Thread.sleep(950);                 //1000 milliseconds is one second.
+                Thread.sleep(4950);                 //1000 milliseconds is one second.
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }

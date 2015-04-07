@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -71,11 +72,6 @@ public class ReservationHandler {
                 loadBalance(pw);
             }
 
-            /* if reservation already "applied" go to next one */
-            if (applied) {
-                System.out.println("RH: Policy already applied!");
-                continue;
-            }
 
             /* Apply actions according to the dates */
             switch (checkDate(now, r.getStartDate(), r.getEndDate())) {
@@ -87,7 +83,9 @@ public class ReservationHandler {
                 case After:
                     System.out.println("------------------------------------------------------------------------------");
                     System.out.println("AFTER");
-
+                    if (!applied) {
+                        break;
+                    }
                     /* Delete all info (db and network) associated with the reservation */
                     deleteResInfo(resID);
 
@@ -96,8 +94,15 @@ public class ReservationHandler {
                     System.out.println("------------------------------------------------------------------------------");
                     System.out.println("WITHIN");
 
+                    /* if reservation already "applied" go to next one */
+                    if (applied) {
+                        System.out.println("RH: Policy already applied!");
+                        break;
+                    }
+
                     /* Apply Dijkstra to find paths between hosts  */
-                    DijkstraOps.findPath(r.getSrcIP(), r.getDstIP());
+                    DijkstraOps.getExistingPath(r.getSrcIP(), r.getDstIP());
+                    //DijkstraOps.findPath(r.getSrcIP(), r.getDstIP());
 
                     /* Indicate that reservation was already processed */
                     r.setApplied(true);
@@ -115,10 +120,11 @@ public class ReservationHandler {
                     rp.setIPs(r.getSrcIP(), r.getDstIP());
                     Utils.ReservPathList.add(rp);
                     if (true) {
-                        System.out.println("Printing Reserved Paths:");
+                        System.out.println("---------------------Printing Reserved Paths:-----------------------");
                         for (ReservPath x : Utils.ReservPathList) {
                             x.toString();
                         }
+                        System.out.println("--------------------------------------------------------------------");
                     }
                     checkPortQueues();
 
@@ -334,38 +340,48 @@ public class ReservationHandler {
         DB_Manager.deleteReservation(resID);
 
         // delete paths from internal data structure associated with the resID
-        for (ReservPath rp : Utils.ReservPathList) {
+        Iterator<ReservPath> iter = Utils.ReservPathList.iterator();
+        while (iter.hasNext()) {
+            ReservPath rp = iter.next();
             if (rp.getResID() == resID) {
-                Utils.ReservPathList.remove(rp);
+                iter.remove();
             }
         }
 
     }
 
     private static void loadBalance(PrintWriter pw) {
-
+        boolean up = false;
         synchronized (lol) {
             /* Apply Load Balancing if link is overloaded */
             if (LINK_OVL) {
-                System.out.println("--------------------------------------------------------------");
+                System.out.println("----------------------------LOAD BALANCE----------------------------------");
                 /* Check Path */
+                System.out.println("Overloaded link: "+ovledLinks.get(0));
+                System.out.println("ReservPaths:");
                 reservLoop:
                 for (ReservPath a : Utils.ReservPathList) {
-                    pathloop:   
+                    System.out.println("\t"+a.toString());
+                    pathloop:
                     for (ParsedPath pp : a.getPath()) {
+                        String concatPortID = pp.getSwID()+":"+pp.getPortNumber();
+                        System.out.println("Port Number: "+concatPortID);
                         //if a reservation contains a path using the ovlded link find another path
-                        if (pp.getPortNumber().equals(ovledLinks.get(0))) {
-                            System.out.println("Reservation "+a.getResID()+" has the link overloaded on up path");
+                        if (concatPortID.equals(ovledLinks.get(0))) {
+                            System.out.println("Reservation " + a.getResID() + " has the link overloaded on up path");
                             // Change that port weight to high metric
-                            DijkstraOps.updateEdge(pp.getSwID(), pp.getPortNumber(), Integer.MAX_VALUE);
+                            DijkstraOps.updateEdge(pp.getSwID(), concatPortID, 10);
                             // Recalculate the path between hosts
+                            System.out.println("Changing edge value. Finding another path");
                             DijkstraOps.findPath(a.getSrcIP(), a.getDstIP());
                             PP = DijkstraOps.getParsedPath();
                             // Verify if the path is valid
                             if (!PP.isEmpty()) {
                                 for (ParsedPath lol : PP) {
                                     //verify if the overloaded port is in new path
-                                    if (lol.getPortNumber().equals(ovledLinks.get(0))) {
+                                    concatPortID = lol.getSwID()+":"+lol.getPortNumber();
+                                    if (concatPortID.equals(ovledLinks.get(0))) {
+                                        System.out.println("NOT VALID! Breaking pathloop");
                                         break pathloop;
                                     }
                                 }
@@ -373,19 +389,21 @@ public class ReservationHandler {
                                 DijkstraOps.updateEdge(pp.getSwID(), pp.getPortNumber(), 1);
                                 replacePath = true;
                                 resPath = a;
-                                System.out.println("Found a new path "+resPath.toString());
+                                revPP = DijkstraOps.getRevParsedPath();
+                                System.out.println("Found a new path " + resPath.toString());
                                 break reservLoop;
                             } else {
                                 break;  //go to next reservation, this has no redundancy
                             }
                         }
                     }
+
                     /* Check Reverse Path */
                     revpathloop:
                     for (ParsedPath pp : a.getRevPath()) {
                         //if a reservation contains a path using the ovldedlink find another path
                         if (pp.getPortNumber().equals(ovledLinks.get(0))) {
-                            System.out.println("Reservation "+a.getResID()+" has the link overloaded on down path");
+                            System.out.println("Reservation " + a.getResID() + " has the link overloaded on down path");
                             // Change that port weight to high metric
                             DijkstraOps.updateEdge(pp.getSwID(), pp.getPortNumber(), Integer.MAX_VALUE);
                             // Recalculate the path between hosts
@@ -403,15 +421,17 @@ public class ReservationHandler {
                                 DijkstraOps.updateEdge(pp.getSwID(), pp.getPortNumber(), 1);
                                 replacePath = true;
                                 resPath = a;
-                                System.out.println("Found a new path "+resPath.toString());
+                                System.out.println("Found a new path " + resPath.toString());
                                 break reservLoop;
                             } else {
                                 break;  //go to next reservation, this has no redundancy
                             }
                         }
                     }
+
                 }
                 //remove processed overloaded link
+                System.out.println("Removing ovled link");
                 ovledLinks.remove(0);
                 if (Utils.ovledLinks.isEmpty()) {
                     LINK_OVL = false;
@@ -419,27 +439,29 @@ public class ReservationHandler {
             }
         }
         if (replacePath) {
-            System.out.println("Replacing path...");
+            System.out.println("++++++++++++++++++++++++++++++++++++++++Replacing path...+++++++++++++++++++++++++++++++++++++");
 
             /* Get old reservation */
             Reservation oldReserv = DB_Manager.getReservation(resPath.getResID());
-            int prio = oldReserv.getPriority() + 11;
+            int prio = oldReserv.getPriority() + 1;
 
             /* Create new reservation equal but with new path and higher prio so there's no packet loss */
             Reservation newReserv = new Reservation(oldReserv.getSrcIP(), oldReserv.getDstIP(), prio,
                     oldReserv.getMinBW(), oldReserv.getMaxBW(), oldReserv.getStartDate(), oldReserv.getEndDate());
+            newReserv.setApplied(true);
             DB_Manager.addReservation(newReserv);
             System.out.println("New Reservation created");
-            
+
             /* Path definition Queues and Flows */
             upPathDefinition(newReserv, pw);
             downPathDefinition(newReserv, pw);
             System.out.println("New path successfully created");
-            
+
             /* Remove Reservation and all associated queues and flows */
             int oldResID = oldReserv.getId();
             deleteResInfo(oldResID);
             System.out.println("Old path successfully deleted");
+            replacePath = false;
         }
     }
 

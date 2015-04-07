@@ -10,10 +10,8 @@ import OVS.CircularArray;
 import OVS.IfaceStatistics;
 import OVS.Queue;
 import static REST_Requests.Constants.UP;
-import static REST_Requests.Constants.lol;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.PriorityQueue;
 
 /**
  *
@@ -33,13 +31,15 @@ public class Port implements IPort {
     private int currBwLoad; //kbps
     private int numberCounter = 0;
     private boolean state;  //true means UP
+    private boolean hostConnection;
 
     public Port() {
+        hostConnection = false;
         queues = new ArrayList<>();
         iFaceStats = new IfaceStatistics();
         state = UP;
-        currBWHistory = new CircularArray(600); //10min = 60*10
-        linkSpeed = 10000000;
+        currBWHistory = new CircularArray(60); //10min = 60*10
+        linkSpeed = 100000;
     }
 
     @Override
@@ -185,6 +185,14 @@ public class Port implements IPort {
 
     public void setLinkSpeed(int linkSpeed) {
         this.linkSpeed = linkSpeed;
+    }
+
+    public boolean isHostConnection() {
+        return hostConnection;
+    }
+
+    public void setHostConnection(boolean hostConnection) {
+        this.hostConnection = hostConnection;
     }
 
 }

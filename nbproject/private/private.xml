@@ -3,13 +3,10 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/nuno/NetBeansProjects/CIMI/src/DB/test.java</file>
-            <file>file:/home/nuno/NetBeansProjects/CIMI/src/REST_Requests/MyJson.java</file>
-            <file>file:/home/nuno/NetBeansProjects/CIMI/src/TopologyManagerImpl/TopoNode.java</file>
+            <file>file:/home/nuno/NetBeansProjects/CIMI/src/TopologyManagerUtils/Utils.java</file>
             <file>file:/home/nuno/NetBeansProjects/CIMI/src/CIMI_Main/Main.java</file>
             <file>file:/home/nuno/NetBeansProjects/CIMI/src/Automation/ReservationHandler.java</file>
-            <file>file:/home/nuno/NetBeansProjects/CIMI/src/TopologyManagerImpl/Port.java</file>
-            <file>file:/home/nuno/NetBeansProjects/CIMI/src/DB/DB_Manager.java</file>
+            <file>file:/home/nuno/NetBeansProjects/CIMI/src/TopologyManagerImpl/Topology.java</file>
         </group>
     </open-files>
 </project-private>

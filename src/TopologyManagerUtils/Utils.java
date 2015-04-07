@@ -35,9 +35,11 @@ import org.w3c.dom.NodeList;
 public class Utils {
 
     public enum StatFields {
+
         tx_errors(0), collisions(1), tx_bytes(2), rx_dropped(4), tx_packets(5),
         rx_packets(6), tx_dropped(7), rx_errors(10), rx_bytes(11);
         public int val;
+
         StatFields(int val) {
             this.val = val;
         }
@@ -47,14 +49,15 @@ public class Utils {
     public static Topology topo = new Topology();
     public static List<String> ovledLinks = new ArrayList<>(); // <switch,port> values
     public static boolean LINK_OVL = false; //some link overloaded
-    public static List<ReservPath> ReservPathList = new ArrayList<>(); 
+    public static List<ReservPath> ReservPathList = new ArrayList<>();
     public static final boolean debug = true;
     public static String qosUUID;
     public static String queueUUID;
     public static int counter = 1;
+    public static boolean firstTime = true;
 
     public static void decodeTopology(Document doc) {
-        
+
         System.out.println("Decoding Topology...");
 
         TopoNode topoNode;
@@ -78,15 +81,16 @@ public class Utils {
                     /* Reading termination ports of node and Creating node */
                     topoNode = new TopoNode();
                     List<Port> lol = readTermPoints(e);
+                    /*
                     if (node_id.equals("openflow:2")) {
                         System.out.println("Utils OPENFLOW:2");
                         for (Port p : lol) {
                             System.out.println("\tPortID= " + p.getPortID());
                         }
                     }
-
+                    */
                     topoNode.setNode(node_id, lol);
-
+                    
                     // if node is a host insert ip and mac
                     if (node_id.contains("host:")) {
                         //retrieve ip
@@ -109,6 +113,9 @@ public class Utils {
         // Reading nodes links
         readNodeLinks(doc);
         //solveBug();
+        /* Checking which node ports are connected to hosts */
+        setHostConPorts();
+        
         if (true) {
             System.out.println("-------------------------------------------------------------------------------------");
             topo.printNodes();
@@ -220,10 +227,15 @@ public class Utils {
                         if (debug) {
                             System.out.printf("\t\t%s\n", swPorts[portCounter]);
                         }
-
+                        
                         /* Add ports to the list */
                         port = new Port();
                         port.setPort(swPorts[portCounter]);
+                        
+                        /* detect if is a port connected to host */
+                        if (!tpElem.getElementsByTagName("tp-id").item(0).getTextContent().contains("host:")) {
+                            
+                        }
                         portList.add(port);
                     }
                 }
@@ -280,23 +292,23 @@ public class Utils {
         long tx_errors, collisions, tx_bytes, rx_dropped, tx_packets,
                 rx_packets, tx_dropped, rx_errors, rx_bytes;
         JSONArray train;
-        
+
         synchronized (lol) {
-            
+            System.out.println("*******************************************************************");
             for (TopoNode tn : Utils.topo.getAllSwitches()) {
                 for (Port p : tn.getAllPorts()) {
-
+                    //ignore statistics from ports connected to hosts
                     try {
                         train = ifaceJson.getJSONObject("rows").getJSONObject(p.getIfaceUUID()).getJSONArray("statistics").getJSONArray(1);
 
                         //gather the info
                         collisions = train.getJSONArray(StatFields.collisions.val).getLong(1);
                         tx_errors = train.getJSONArray(StatFields.tx_errors.val).getLong(1);
-                        tx_bytes = train.getJSONArray(StatFields.tx_bytes.val).getLong(1);
+                        tx_bytes = train.getJSONArray(StatFields.tx_bytes.val).getLong(1) * 8 / 1000;   //kbps
                         tx_packets = train.getJSONArray(StatFields.tx_packets.val).getLong(1);
                         tx_dropped = train.getJSONArray(StatFields.tx_dropped.val).getLong(1);
                         rx_errors = train.getJSONArray(StatFields.rx_errors.val).getLong(1);
-                        rx_bytes = train.getJSONArray(StatFields.rx_bytes.val).getLong(1);
+                        rx_bytes = train.getJSONArray(StatFields.rx_bytes.val).getLong(1) * 8 / 1000;   //kbps
                         rx_packets = train.getJSONArray(StatFields.rx_packets.val).getLong(1);
                         rx_dropped = train.getJSONArray(StatFields.rx_dropped.val).getLong(1);
 
@@ -304,25 +316,35 @@ public class Utils {
                         p.getiFaceStats().setIfaceStatistics(collisions, rx_bytes, rx_packets, rx_dropped, rx_errors, tx_bytes, tx_packets, tx_dropped, tx_errors);
                         if (p.getiFaceStats().getTx_bytes() >= p.getiFaceStats().getLastTx_bytes()) {
                             System.out.println("Curr " + p.getiFaceStats().getTx_bytes() + " Last " + p.getiFaceStats().getLastTx_bytes());
-                            int bw = (int) (((p.getiFaceStats().getTx_bytes() - p.getiFaceStats().getLastTx_bytes()) * 8) / 1000); //kbps
+                            int bw = (int) (((p.getiFaceStats().getTx_bytes() - p.getiFaceStats().getLastTx_bytes())) / 5); //kbps 5 because every 5sec
                             p.updateCurrLoad(bw);
                         } else {
                             System.out.println("Last tx bytes < current tx bytes");
                         }
-                        
+
                         /* Verify congestioned links every 10 min */
-                        if(counter == p.getCurrBWHistory().getSize()){
+                        //if(counter == p.getCurrBWHistory().getSize()){
                             /* Verify if link is overloaded (avgLinkLoad > 80% of LinkSpeed) */
-                            if( p.getCurrBWHistory().calcAvg() > 0.8 * p.getLinkSpeed() ){
+                        //if( p.getCurrBWHistory().calcAvg() > 0.8 * p.getLinkSpeed() ){
+                        if (!firstTime) {
+                            if (p.getCurrBWHistory().getPrev() > 0.8 * p.getLinkSpeed()) {
+                                System.out.println("Curr(prev) value(kbps): " + p.getCurrBWHistory().getPrev());
                                 ovledLinks.add(p.getPortID());        // add port to ovledLinks
                                 LINK_OVL = true;            // some link is overloaded
                                 counter = 0; //reset counter
-                                System.out.println("FOUND A CONGESTIONED LINK!");
+                                System.out.println("FOUND A CONGESTIONED LINK: " + p.getPortID() + " !");
+                            } else {
+                                //remove from ovled links if was put there
+                                if (ovledLinks.contains(p.getPortID())) {
+                                    String aux = p.getPortID();
+                                    ovledLinks.remove(aux);
+                                }
                             }
                         }
+
                         counter++;
                         System.out.println("Switch " + tn.getId() + " Port: " + p.getPortID() + " with iface: " + p.getIfaceUUID()
-                                + " Current Link Load (kbps): " + p.getCurrBwLoad() + " Avg Link Load(kbps): "+p.getCurrBWHistory().getAverage());
+                                + " Current Link Load (kbps): " + p.getCurrBwLoad() + " Avg Link Load(kbps): " + p.getCurrBWHistory().getAverage());
 
                         if (debug) {
                             System.out.println(p.getiFaceStats().toString());
@@ -332,8 +354,25 @@ public class Utils {
                     }
                 }
             }
-            
+            if (firstTime) {
+                firstTime = false;
+            }
+            System.out.println("*******************************************************************");
         }
+
     }
 
+    private static void setHostConPorts(){
+        
+        for(TopoNode tn : topo.getAllSwitches()){
+            for(NodeCon nc : tn.getNodeCon()){
+                if(nc.getDstNodeId().contains("host:")){
+                    //if switch port connected to host, set hostConnection true on that port
+                    tn.getPort(nc.getFrom()).setHostConnection(true);
+                }
+            }
+        }
+        
+    }
+    
 }
