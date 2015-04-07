@@ -5,6 +5,7 @@
  */
 package Automation;
 
+import CIMI_Main.GeneralStatistics;
 import DB.DB_Manager;
 import DB.FlowMap;
 import DB.QosMap;
@@ -55,6 +56,9 @@ public class ReservationHandler {
     private static String srcHostId, dstHostId;
     private static boolean replacePath = false;
     private static ReservPath resPath = new ReservPath();
+    /* Time variables */
+    private static long startTime;
+    private static long endTime;
 
     public static void process(List<Reservation> resList, PrintWriter pw) throws FileNotFoundException {
         //PrintWriter pw = new PrintWriter("queueUUID.txt");
@@ -69,6 +73,7 @@ public class ReservationHandler {
             int resID = r.getId();
             boolean applied = r.getApplied();
             if (applyLoadBalance) {
+                startTime = System.nanoTime();
                 loadBalance(pw);
             }
 
@@ -115,10 +120,16 @@ public class ReservationHandler {
                     System.out.println("Reservation processed successfully!");
 
                     //Insert the paths associated with a resID into a internal data structure
+                    startTime = System.nanoTime();
+                    
                     rp = new ReservPath(r.getId());
                     rp.setPaths(PP, revPP);
                     rp.setIPs(r.getSrcIP(), r.getDstIP());
                     Utils.ReservPathList.add(rp);
+                    
+                    endTime = System.nanoTime();
+                    GeneralStatistics.lbDuration += (endTime - startTime) / 1000000.0;
+                    
                     if (true) {
                         System.out.println("---------------------Printing Reserved Paths:-----------------------");
                         for (ReservPath x : Utils.ReservPathList) {
@@ -155,6 +166,8 @@ public class ReservationHandler {
         for (ParsedPath p : PP) {
             int prio = r.getPriority();
             System.out.println("At Switch " + p.getSwID() + " port Number " + p.getPortNumber());
+            
+            startTime = System.nanoTime();
             //FUCKIN TRAIN
             Port trainPort = Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber()));
 
@@ -186,29 +199,45 @@ public class ReservationHandler {
             } else {
                 System.out.println("RH: Put failed!");
             }
-
+            endTime = System.nanoTime();
+            GeneralStatistics.queueDuration += (endTime - startTime) / 1000000.0;
+            
             //save in text file
             pw.println(Utils.queueUUID);
             pw.flush();
 
+            startTime = System.nanoTime();
+            
             //Save Queue in db
             qm = new QosMap(p.getSwID(), trainPort.getPortID(), trainPort.getPortUUID(), qosUUID, q.getUuid());
             qm.setResID(r); //set reservation as FK
             DB_Manager.addQos(qm);
 
+            endTime = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTime - startTime) / 1000000.0;
+            
             /* Flows */
+            startTime = System.nanoTime();
             // create flow config
             fc.setFlowConfig(p.getSwID(), 0, Utils.topo.getNode(p.getSwID()).getAndIncFlowID(), (r.getPriority() + 10), r.getSrcIP(), r.getDstIP(),
                     p.getPortNumber(), Integer.toString(trainPort.getNumberCounter()));
-
+            
             // send flow to controller and switch
             MyXML.sendPut(true, false, fc);
 
+            endTime = System.nanoTime();
+            GeneralStatistics.flowDuration += (endTime - startTime) / 1000000.0;
+            
+            startTime = System.nanoTime();
+            
             //save Flow in db 
             fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, fc.getFlowID());
 
             fm.setResID(r); //set reservation as FK
             DB_Manager.addFlow(fm);
+            
+            endTime = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTime - startTime) / 1000000.0;
 
         }
     }
@@ -226,6 +255,9 @@ public class ReservationHandler {
         for (ParsedPath p : revPP) {
             int prio = r.getPriority();
 
+            
+            startTime = System.nanoTime();
+            
             //FUCKIN TRAIN
             Port trainPort = Utils.topo.getNode(p.getSwID()).getPortByNumber(Integer.parseInt(p.getPortNumber()));
 
@@ -256,29 +288,46 @@ public class ReservationHandler {
                 System.out.println("RH: Put failed!");
             }
 
+            endTime = System.nanoTime();
+            GeneralStatistics.queueDuration += (endTime - startTime) / 1000000.0;
+            
             //save in text file
             pw.println(Utils.queueUUID);
             pw.flush();
 
+            startTime = System.nanoTime();
+            
             //Save Queue in db (add the queue-id mapped on flow to the db)
             qm = new QosMap(p.getSwID(), trainPort.getPortID(), trainPort.getPortUUID(), qosUUID, q.getUuid());
             qm.setResID(r); //set reservation as FK
             DB_Manager.addQos(qm);
-
+            
+            endTime = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTime - startTime) / 1000000.0;
+            
             /* Flows */
+            startTime = System.nanoTime();
             // create flow config
             fc.setFlowConfig(p.getSwID(), 0, Utils.topo.getNode(p.getSwID()).getAndIncFlowID(), r.getPriority(), r.getDstIP(), r.getSrcIP(),
                     p.getPortNumber(), Integer.toString(trainPort.getNumberCounter()));
-
+            
             // send flow to controller and switch
             MyXML.sendPut(true, false, fc);
 
+            endTime = System.nanoTime();
+            GeneralStatistics.flowDuration += (endTime - startTime) / 1000000.0;
+            
+            startTime = System.nanoTime();
+            
             //save Flow in db 
             fm = new FlowMap(fc.getNodeID(), trainPort.getPortID(), 0, fc.getFlowID());
 
             fm.setResID(r); //set reservation as FK
 
             DB_Manager.addFlow(fm);
+            
+            endTime = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTime - startTime) / 1000000.0;
 
         }
     }
@@ -353,6 +402,7 @@ public class ReservationHandler {
     private static void loadBalance(PrintWriter pw) {
         boolean up = false;
         synchronized (lol) {
+            long startTime = System.nanoTime();
             /* Apply Load Balancing if link is overloaded */
             if (LINK_OVL) {
                 System.out.println("----------------------------LOAD BALANCE----------------------------------");
@@ -437,10 +487,13 @@ public class ReservationHandler {
                     LINK_OVL = false;
                 }
             }
+            long endTime = System.nanoTime();
+            GeneralStatistics.lbDuration += (endTime - startTime) / 1000000.0;
         }
         if (replacePath) {
             System.out.println("++++++++++++++++++++++++++++++++++++++++Replacing path...+++++++++++++++++++++++++++++++++++++");
-
+            
+            startTime = System.nanoTime();
             /* Get old reservation */
             Reservation oldReserv = DB_Manager.getReservation(resPath.getResID());
             int prio = oldReserv.getPriority() + 1;
@@ -450,6 +503,9 @@ public class ReservationHandler {
                     oldReserv.getMinBW(), oldReserv.getMaxBW(), oldReserv.getStartDate(), oldReserv.getEndDate());
             newReserv.setApplied(true);
             DB_Manager.addReservation(newReserv);
+            
+            endTime = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTime - startTime) / 1000000.0;
             System.out.println("New Reservation created");
 
             /* Path definition Queues and Flows */

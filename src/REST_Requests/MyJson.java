@@ -5,6 +5,7 @@
  */
 package REST_Requests;
 
+import CIMI_Main.GeneralStatistics;
 import CIMI_Main.Main;
 import CIMI_Main.TestODL;
 import OVS.Queue;
@@ -243,8 +244,9 @@ public class MyJson {
             }
 
             try ( // Set data to send and close channel
-                    DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
+                DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
                 os.writeBytes(data.toString());
+                GeneralStatistics.queueSignOverhead += data.toString().length();
                 os.flush();
             }
 
@@ -361,6 +363,7 @@ public class MyJson {
             try ( // Set data to send and close channel
                     DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
                 os.writeBytes(data.toString());
+                GeneralStatistics.queueSignOverhead += data.toString().length();
                 os.flush();
             }
 

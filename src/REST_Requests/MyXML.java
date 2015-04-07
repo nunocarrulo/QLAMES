@@ -5,6 +5,7 @@
  */
 package REST_Requests;
 
+import CIMI_Main.GeneralStatistics;
 import TopologyManagerUtils.Utils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -173,7 +174,7 @@ public class MyXML {
             connection.setDoInput(true);
             connection.setDoOutput(true);
             System.out.println("Setting connection properties and data...");
-
+            
             //normalize document
             xmlDoc.getDocumentElement().normalize();
 
@@ -183,6 +184,9 @@ public class MyXML {
             // Set data to send and close channel
             DataOutputStream os = new DataOutputStream(connection.getOutputStream());
             os.writeBytes(getStringFromDoc(xmlDoc));
+            
+            GeneralStatistics.flowSignOverhead += getStringFromDoc(xmlDoc).length();
+            
             os.flush();
             os.close();
 

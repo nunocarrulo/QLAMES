@@ -5,6 +5,7 @@
  */
 package TopologyManagerUtils;
 
+import CIMI_Main.GeneralStatistics;
 import Dijkstra.ReservPath;
 import static REST_Requests.Constants.lol;
 import TopologyManagerImpl.NodeCon;
@@ -294,10 +295,15 @@ public class Utils {
         JSONArray train;
 
         synchronized (lol) {
+            long startTime = System.nanoTime();
             System.out.println("*******************************************************************");
             for (TopoNode tn : Utils.topo.getAllSwitches()) {
                 for (Port p : tn.getAllPorts()) {
-                    //ignore statistics from ports connected to hosts
+                    
+                    /* ignore statistics from ports connected to hosts */
+                    if(p.isHostConnection())
+                        continue;
+                    
                     try {
                         train = ifaceJson.getJSONObject("rows").getJSONObject(p.getIfaceUUID()).getJSONArray("statistics").getJSONArray(1);
 
@@ -358,6 +364,9 @@ public class Utils {
                 firstTime = false;
             }
             System.out.println("*******************************************************************");
+            
+            long endTime = System.nanoTime();
+            GeneralStatistics.lbDuration += (endTime - startTime) / 1000000.0;
         }
 
     }

@@ -13,7 +13,7 @@ public class Constants {
     
     public static final Object lol = new Object();
     public static final double LINK_THRESHOLD = 0.8;    //80%
-    public static final boolean applyLoadBalance = true;
+    public static final boolean applyLoadBalance = false;
     
     /* HTTP ERROR CODES */
     public static final int OK = 200;

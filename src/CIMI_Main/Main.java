@@ -70,7 +70,6 @@ public class Main {
         /* Getting Topology */
         System.out.println("Obtaining network topology...");
         MyXML.sendGet(Constants.topo, null); // requesting topology to controller
-        System.exit(0);
         
         /* Finding paths using Dijkstra algorithm */
         System.out.println("Running Dijkstra algorithm...\n\tConstructing graph...");
@@ -106,24 +105,42 @@ public class Main {
             st.start();
         }
         /* Poll database entries to check new reservations */
-        //long time = System.nanoTime();
+        long time = System.nanoTime();
         while (true) {
+            
             // Get all reservations
+            long startTime = System.nanoTime();
+            
             resList = DB_Manager.getReservations();
+            
+            long endTime = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTime - startTime) / 1000000.0;
+            
             // Verify what needs to be done
             ReservationHandler.process(resList, pw);
-            
+            /*
             try {
                 Thread.sleep(5000);                 //1000 milliseconds is one second.
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
-            
-            //break;
+            */
+            break;
         }
-        //long timeEnd = System.nanoTime();
-        //double runTime = (timeEnd - time) / 1000000000.0;
-        //System.out.println("Done Once!\nRuntime: "+runTime+" sec");
+        GeneralStatistics.totalSignOverhead = GeneralStatistics.flowSignOverhead + GeneralStatistics.queueSignOverhead;
+        
+        System.out.println("-----------------------------------GENERAL STATISTICS-----------------------------------");
+        System.out.println("DURATION:");
+        System.out.printf("\tQoS : \t%.1f msec\n\tFlow : \t%.1f msec \n\tDB : \t%.1f msec \n\tLoadBalance : \t%.1f msec\n", GeneralStatistics.queueDuration, 
+                    GeneralStatistics.flowDuration, GeneralStatistics.databaseDuration, GeneralStatistics.lbDuration);
+        System.out.println("OVERHEAD");
+        System.out.printf("\tQoS : \t%d bytes\n\tFlow : \t%d bytes \n\tTotal: \t%d bytes \n", GeneralStatistics.queueSignOverhead, 
+                    GeneralStatistics.flowSignOverhead, GeneralStatistics.totalSignOverhead);
+        
+        //long startTime = System.nanoTime();
+        long endTime = System.nanoTime();
+        double runTime = (endTime - time) / 1000000.0; // in msec
+        System.out.printf("Done Once!\nRuntime: %.1f msec", runTime);
 
     }
 
