@@ -23,7 +23,7 @@ public interface IDB_Manager {
      * @param resId Reservation ID
      * @return 
      */
-    public List<FlowMap> getFlowMap(int resId);
+    public List<Flowmap> getFlowMap(int resId);
     
     /**
      * Returns all QosMap entries with the specified reservation id
@@ -31,19 +31,19 @@ public interface IDB_Manager {
      * @return 
      */
     
-    public List<QosMap> getQosMap(int resId);
+    public List<Qosmap> getQosMap(int resId);
     
     /**
      * Inserts the flow parameters from a specific reservation
      * @param flow FlowMap to be inserted on database
      */
-    public void addQueue(FlowMap flow);
+    public void addQueue(Flowmap flow);
     
     /**
      * Inserts the qos (queue) parameters from a specific reservation
      * @param qos 
      */
-    public void addQos(QosMap qos);
+    public void addQos(Qosmap qos);
     
     /**
      * Inserts a reservation on database

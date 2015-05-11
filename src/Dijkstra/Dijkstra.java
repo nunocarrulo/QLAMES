@@ -71,7 +71,7 @@ public class Dijkstra {
                 Vertex v = e.target;
                 int weight = e.weight;
                 int distanceThroughU = u.minDistance + weight;
-                System.out.println("Dij_CP: From "+u.name+" to "+e.toString()+"\t"+distanceThroughU);
+                //System.out.println("Dij_CP: From "+u.name+" to "+e.toString()+"\t"+distanceThroughU);
                 if (distanceThroughU < v.minDistance) {
                     vertexQueue.remove(v);
                     v.minDistance = distanceThroughU;

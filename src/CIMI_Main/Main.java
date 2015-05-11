@@ -20,12 +20,16 @@ import TopologyManagerImpl.QosConfig;
 import TopologyManagerImpl.TopoNode;
 import TopologyManagerUtils.Utils;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -42,22 +46,9 @@ public class Main {
     public static void main(String[] args) throws FileNotFoundException {
 
         //testDBOrder();
+        //checkInsertionRefresh();
         //testDBScal();
         //testDB();
-        
-        /* Variables and Data structures initialization */
-        /*FlowConfig fc = new FlowConfig();
-        
-        Reservation r;
-        */
-        /* Reservation parameters */
-        /*String srcIP, dstIP;
-        int priority;
-        int minBW, maxBW;
-        Calendar calendar;
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
-        Date start, end;
-        */
         
         QosConfig qc = new QosConfig();
         List<Reservation> resList;
@@ -76,7 +67,6 @@ public class Main {
         DijkstraOps.createGraph();
         System.out.println("Graph ready. Ready to find paths.");
 
-        //srcIP = "10.0.0.1"; dstIP = "10.0.0.5";
         //DijkstraOps.findPath(srcIP, dstIP);
         //System.exit(0);
 
@@ -100,21 +90,27 @@ public class Main {
         PrintWriter pw = new PrintWriter("queueUUID.txt");
         
         //start statistics collector thread
+        StatisticsThread st;
         if(applyLoadBalance){
-            StatisticsThread st = new StatisticsThread();
+            st = new StatisticsThread();
             st.start();
         }
+        System.out.println("QoS row time: "+GeneralStatistics.odlQosDuration);
+        GeneralStatistics.queueDuration = GeneralStatistics.odlQosDuration = 0.0;
+        boolean lol = true;
         /* Poll database entries to check new reservations */
         long time = System.nanoTime();
-        while (true) {
+        GeneralStatistics.absTime = time;
+        
+        while (lol) {
             
             // Get all reservations
             long startTime = System.nanoTime();
             
             resList = DB_Manager.getReservations();
             
-            long endTime = System.nanoTime();
-            GeneralStatistics.databaseDuration += (endTime - startTime) / 1000000.0;
+            long endTimew = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTimew - startTime) / 1000000.0;
             
             // Verify what needs to be done
             ReservationHandler.process(resList, pw);
@@ -125,24 +121,94 @@ public class Main {
                 Thread.currentThread().interrupt();
             }
             */
-            break;
+            //break;
         }
+        
+        long endTime = System.nanoTime();
+        GeneralStatistics.runtime = (endTime - time) / 1000000.0; // in msec
+        
+        if(applyLoadBalance){
+            st.stop();
+        }
+        
         GeneralStatistics.totalSignOverhead = GeneralStatistics.flowSignOverhead + GeneralStatistics.queueSignOverhead;
         
         System.out.println("-----------------------------------GENERAL STATISTICS-----------------------------------");
         System.out.println("DURATION:");
-        System.out.printf("\tQoS : \t%.1f msec\n\tFlow : \t%.1f msec \n\tDB : \t%.1f msec \n\tLoadBalance : \t%.1f msec\n", GeneralStatistics.queueDuration, 
-                    GeneralStatistics.flowDuration, GeneralStatistics.databaseDuration, GeneralStatistics.lbDuration);
+        System.out.printf("\tQoS : \t%.1f msec\n\tFlow : \t%.1f msec \n\tDB : \t%.1f msec \n\tLoadBalance : \t%.1f msec\n\tDijkstra : \t%.1f msec\n\tODL Flow : \t%.1f msec\n\tODL QoS : \t%.1f msec\n\tTeardown Flow : %.1f msec\n\tTeardown QoS : %.1f msec\n\t Teardown Other : %.1f msec \n", 
+                (GeneralStatistics.queueDuration-GeneralStatistics.odlQosDuration), GeneralStatistics.flowDuration, GeneralStatistics.databaseDuration, GeneralStatistics.lbDuration, GeneralStatistics.dijkstraDuration, 
+                GeneralStatistics.odlFlowDuration, GeneralStatistics.odlQosDuration, GeneralStatistics.teardownFlowDuration, GeneralStatistics.teardownQoSDuration, 
+                GeneralStatistics.teardownOtherDuration);
         System.out.println("OVERHEAD");
         System.out.printf("\tQoS : \t%d bytes\n\tFlow : \t%d bytes \n\tTotal: \t%d bytes \n", GeneralStatistics.queueSignOverhead, 
                     GeneralStatistics.flowSignOverhead, GeneralStatistics.totalSignOverhead);
         
-        //long startTime = System.nanoTime();
-        long endTime = System.nanoTime();
-        double runTime = (endTime - time) / 1000000.0; // in msec
-        System.out.printf("Done Once!\nRuntime: %.1f msec", runTime);
+        System.out.printf("Done Once!\nRuntime: %.1f msec", GeneralStatistics.runtime);
+        
+        System.out.println("-----------------------------------------------------------");
+        System.out.println("Changing dates to delete");
+        /*Calendar calendar = new GregorianCalendar(2015, 2, 12, 19, 20, 0);
+        Date end = calendar.getTime();
+        for(Reservation a : resList){
+            a.setEndDate(end);
+            
+        }
+        for(Reservation a : resList){
+            DB_Manager.editReservation(a);
+        }*/
+        System.out.println("Press any key after change endDate");
+        try {
+            System.in.read();
+        } catch (IOException ex) {
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        /* Prepare database to write and read */
+        DB_Manager.closeDB();
+        DB_Manager.prepareDB();
+        
+        //reset times
+        GeneralStatistics.databaseDuration = GeneralStatistics.queueDuration = GeneralStatistics.odlQosDuration = 0.0;
+        GeneralStatistics.lbDuration = GeneralStatistics.flowDuration = GeneralStatistics.odlFlowDuration = 0.0;
+        GeneralStatistics.queueSignOverhead = GeneralStatistics.flowSignOverhead = 0;
+        
+        time = 0;
+        time = System.nanoTime();
+        System.out.println("Starting teardown...");
+        while (true) {
+            
+            // Get all reservations
+            long startTime2 = System.nanoTime();
+            
+            resList = DB_Manager.getReservations();
+            
+            long endTime2 = System.nanoTime();
+            GeneralStatistics.databaseDuration += (endTime2 - startTime2) / 1000000.0;
+            
+            // Verify what needs to be done
+            ReservationHandler.process(resList, pw);
 
+            break;
+        }
+        endTime = System.nanoTime();
+        GeneralStatistics.runtime = (endTime - time) / 1000000.0; // in msec
+        
+        GeneralStatistics.totalSignOverhead = GeneralStatistics.flowSignOverhead + GeneralStatistics.queueSignOverhead;
+        
+        System.out.println("-----------------------------------GENERAL STATISTICS-----------------------------------");
+        System.out.println("DURATION:");
+        System.out.printf("\tQoS : \t%.1f msec\n\tFlow : \t%.1f msec \n\tDB : \t%.1f msec \n\tLoadBalance : \t%.1f msec\n\tDijkstra : \t%.1f msec\n\tODL Flow : \t%.1f msec\n\tODL QoS : \t%.1f msec\n\tTeardown Flow : %.1f msec\n\tTeardown QoS : %.1f msec\n\t Teardown Other : %.1f msec \n", 
+                (GeneralStatistics.queueDuration-GeneralStatistics.odlQosDuration), GeneralStatistics.flowDuration, GeneralStatistics.databaseDuration, GeneralStatistics.lbDuration, GeneralStatistics.dijkstraDuration, 
+                GeneralStatistics.odlFlowDuration, GeneralStatistics.odlQosDuration, GeneralStatistics.teardownFlowDuration, GeneralStatistics.teardownQoSDuration, 
+                GeneralStatistics.teardownOtherDuration);
+        System.out.println("OVERHEAD");
+        System.out.printf("\tQoS : \t%d bytes\n\tFlow : \t%d bytes \n\tTotal: \t%d bytes \n", GeneralStatistics.queueSignOverhead, 
+                    GeneralStatistics.flowSignOverhead, GeneralStatistics.totalSignOverhead);
+        
+        System.out.printf("Done Once Teardown!\nRuntime: %.1f msec", GeneralStatistics.runtime);
+        
     }
+    
 
     public static void addQoSUUID(QosConfig qc) throws FileNotFoundException {
 
@@ -198,6 +264,34 @@ public class Main {
         System.exit(0);
     }
 
+    
+    public static void checkInsertionRefresh(){
+        System.out.println("Testing DB Refresh...");
+        List<Reservation> resList;
+        DB_Manager.prepareDB();
+        int cont = 0;
+        while(true){
+            resList = DB_Manager.getReservations();
+            System.out.println("Printing existing Reservations ...");
+            System.out.println("Size: "+resList.size()+" cont = "+cont);
+            for (Reservation res : resList){ 
+                //System.out.println("ID = " + res.getId() + " sourceIP = " + res.getSrcIP() + " dstIP = " + res.getDstIP() +" startDate = "+res.getStartDate());
+                System.out.println("ID = " + res.getId() + " applied = "+res.getApplied());
+            }
+            if(cont > 5000){
+                System.exit(0);
+            }
+            if(cont == 5000){
+                System.out.println("Editing Reservation");
+                Reservation r = resList.get(1);
+                r.setApplied(true);
+                DB_Manager.editReservation(r);
+            }
+            cont++;
+        }
+        
+        
+    }
     public static void testDBScal() {
         System.out.println("Testing DB stuff...");
         List<Reservation> resList;
@@ -211,16 +305,76 @@ public class Main {
         DB_Manager.prepareDB();
 
         /* Initialize reservation parameters */
-        String srcIPs[] = {"10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4", "10.0.0.5"};
-        //String srcIPs[] = {"10.0.0.1"};
+        //String srcIPs[] = {"10.0.0.1", "10.0.0.2", "10.0.0.3", "10.0.0.4", "10.0.0.5"};
+        String srcIPs[][] = {{"10.0.0.1", "10.0.0.2", "10.0.0.3"}, 
+                            {"10.0.0.11", "10.0.0.12", "10.0.0.13"}, 
+                            {"10.0.0.21", "10.0.0.22", "10.0.0.23"},
+                            {"10.0.0.31", "10.0.0.32", "10.0.0.33"},
+                            {"10.0.0.41", "10.0.0.42", "10.0.0.43"}};
         //String dstIPs[] = {"10.0.0.3"};
         //srcIP = "10.0.0.1";
         //dstIP = "10.0.0.2";
         priority = 5;
         minBW = 40000;
         maxBW = 50000;
+        Random rnd = new Random();
 
         for (int a = 0; a < 1; a++) {
+            for (int i = 0; i < srcIPs.length; i++) {
+                for (int j = 0; j < srcIPs[0].length; j++) {
+
+                    switch (rnd.nextInt(5)) {
+                        case 0:
+                            minBW = 10000;
+                            maxBW = 20000;
+                            break;
+                        case 1:
+                            minBW = 20000;
+                            maxBW = 30000;
+                            break;
+                        case 2:
+                            minBW = 30000;
+                            maxBW = 40000;
+                            break;
+                        case 3:
+                            minBW = 40000;
+                            maxBW = 50000;
+                            break;
+                        case 4:
+                            minBW = 50000;
+                            maxBW = 60000;
+                            break;
+                        default:
+                            System.out.println("DEU MERDA");
+                            break;
+                    }
+                    calendar = new GregorianCalendar(2015, 3, 10, 11, 0, 0);
+                    System.out.println(sdf.format(calendar.getTime()));
+                    start = calendar.getTime();
+                    calendar = new GregorianCalendar(2015, 3, 27, 23, 00, 0);
+                    end = calendar.getTime();
+
+                    for(int x = i+1; x < srcIPs.length; x++)
+                        for(int y = 0; y < srcIPs[0].length; y++){
+                            int startDay = rnd.nextInt(25)+1;
+                            calendar = new GregorianCalendar(2015, 3, startDay, 23, 00, 0);
+                            start = calendar.getTime();
+                            r = new Reservation(srcIPs[i][j], srcIPs[x][y], priority, minBW, maxBW, start, end);
+                            DB_Manager.addReservation(r);
+                            System.out.println("Reservation added!");
+                        }
+                }
+            }
+        }
+
+        resList = DB_Manager.getReservations();
+        System.out.println("Printing existing Reservations ...");
+        System.out.println("Size: "+resList.size());
+        for (Reservation res : resList){ 
+            System.out.println("ID = " + res.getId() + " sourceIP = " + res.getSrcIP() + " dstIP = " + res.getDstIP() +" startDate = "+res.getStartDate());
+        }
+        
+        /*for (int a = 0; a < 1; a++) {
             for (int i = 0; i < srcIPs.length; i++) {
                 for (int j = i; j < srcIPs.length; j++) {
                     if (i == j) {
@@ -261,7 +415,7 @@ public class Main {
                     System.out.println("Reservation added!");
                 }
             }
-        }
+        }*/
 
         System.exit(0);
     }

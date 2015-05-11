@@ -22,11 +22,11 @@ public class DB_Manager {
 
     private static final boolean debug = true;
     private static List<Reservation> resList = new ArrayList<>();
-    private static List<FlowMap> flow = new ArrayList<>();
-    private static List<QosMap> qos = new ArrayList<>();
+    private static List<Flowmap> flow = new ArrayList<>();
+    private static List<Qosmap> qos = new ArrayList<>();
     private static ReservationJpaController resCtl;
-    private static FlowMapJpaController fmCtl;
-    private static QosMapJpaController qmCtl;
+    private static FlowmapJpaController fmCtl;
+    private static QosmapJpaController qmCtl;
     private static EntityManagerFactory emf;
     private static EntityManager em;
     
@@ -39,7 +39,7 @@ public class DB_Manager {
         
         resList = resCtl.findReservationEntities();
         
-        if (debug) {
+        if (false) {
             System.out.println("Printing existing Reservations ...");
             for (Reservation r : resList) {
                 System.out.println("ID = " + r.getId() + " sourceIP = " + r.getSrcIP() + " dstIP = " + r.getDstIP());
@@ -48,18 +48,18 @@ public class DB_Manager {
         return resList;
     }
     
-    public static List<FlowMap> getFlowMap(int resId){
+    public static List<Flowmap> getFlowMap(int resId){
         flow.clear();
-        for(FlowMap lol : fmCtl.findFlowMapEntities()){
+        for(Flowmap lol : fmCtl.findFlowmapEntities()){
             if(lol.getResID().getId() == resId)
                 flow.add(lol);
         }
         return flow;
     }
     
-    public static List<QosMap> getQosMap(int resId){
+    public static List<Qosmap> getQosMap(int resId){
         qos.clear();
-        for(QosMap lol : qmCtl.findQosMapEntities()){
+        for(Qosmap lol : qmCtl.findQosmapEntities()){
             if(lol.getResID().getId() == resId)
                 qos.add(lol);
         }
@@ -76,11 +76,11 @@ public class DB_Manager {
         }
     }
     
-    public static void addFlow(FlowMap flow){
+    public static void addFlow(Flowmap flow){
         fmCtl.create(flow);
     }
     
-    public static void addQos(QosMap qos){
+    public static void addQos(Qosmap qos){
         qmCtl.create(qos);
     }
    
@@ -90,8 +90,8 @@ public class DB_Manager {
     
     public static void deleteQosMapEntries(int resID){
 
-        qos = qmCtl.findQosMapEntities();
-        for(QosMap q : qos){
+        qos = qmCtl.findQosmapEntities();
+        for(Qosmap q : qos){
             if(q.getResID().getId() == resID)
                 try {
                     qmCtl.destroy(q.getId());
@@ -103,8 +103,8 @@ public class DB_Manager {
     
     public static void deleteFlowMapEntries(int resID){
 
-        flow = fmCtl.findFlowMapEntities();
-        for(FlowMap f : flow){
+        flow = fmCtl.findFlowmapEntities();
+        for(Flowmap f : flow){
             if(f.getResID().getId() == resID)
                 try {
                     fmCtl.destroy(f.getId());
@@ -139,9 +139,21 @@ public class DB_Manager {
         emf = javax.persistence.Persistence.createEntityManagerFactory("hi");
         em = emf.createEntityManager();
         resCtl = new ReservationJpaController(emf);
-        fmCtl = new FlowMapJpaController(emf);
-        qmCtl = new QosMapJpaController(emf);
+        fmCtl = new FlowmapJpaController(emf);
+        qmCtl = new QosmapJpaController(emf);
+    }
+    public static void refreshDB(){
+        
+        for(Reservation a : resList){
+            em.merge(a);
+            em.refresh(a);
+        }
     }
     
+    public static void closeDB(){
+        em.close();
+        emf.close();
+        
+    }
 
 }

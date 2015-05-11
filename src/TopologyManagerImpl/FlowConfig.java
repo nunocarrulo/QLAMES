@@ -13,6 +13,7 @@ public class FlowConfig {
 
     private String nodeID;
     private String flowName;
+    private int qPrio;
     private int flowPrio;
     private int flowID;
     private int tableID;
@@ -28,10 +29,11 @@ public class FlowConfig {
 
     }
 
-    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort) {
+    public FlowConfig(String nodeid, int tableID, int flowID, int qPrio, int flowPrio, String srcIP, String dstIP, String outputPort) {
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
+        this.qPrio = qPrio;
         this.flowPrio = flowPrio;
         this.srcIP = srcIP + "/32";
         this.dstIP = dstIP + "/32";
@@ -40,10 +42,11 @@ public class FlowConfig {
         hardTimeout = idleTimeout = 0;
     }
 
-    public FlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort, String qid) {
+    public FlowConfig(String nodeid, int tableID, int flowID, int qPrio, int flowPrio, String srcIP, String dstIP, String outputPort, String qid) {
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
+        this.qPrio = qPrio;
         this.flowPrio = flowPrio;
         this.srcIP = srcIP + "/32";
         this.dstIP = dstIP + "/32";
@@ -54,14 +57,14 @@ public class FlowConfig {
     }
     
     
-    public void setFlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort) {
+    public void setFlowConfig(String nodeid, int tableID, int flowID, int qPrio, String srcIP, String dstIP, String outputPort) {
         //clear object before use it
         clearFlowConfig();
         
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
-        this.flowPrio = flowPrio;
+        this.qPrio = qPrio;
         this.outputPort = outputPort;
 
         // Concat mask if not empty
@@ -77,13 +80,14 @@ public class FlowConfig {
         hardTimeout = idleTimeout = 0;
     }
     
-    public void setFlowConfig(String nodeid, int tableID, int flowID, int flowPrio, String srcIP, String dstIP, String outputPort, String queueUUID) {
+    public void setFlowConfig(String nodeid, int tableID, int flowID, int qPrio, int flowPrio, String srcIP, String dstIP, String outputPort, String queueUUID) {
         //clear object before use it
         clearFlowConfig();
         
         this.nodeID = nodeid;
         this.tableID = tableID;
         this.flowID = flowID;
+        this.qPrio = qPrio;
         this.flowPrio = flowPrio;
         this.outputPort = outputPort;
         this.qID = queueUUID;

@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.TypedQuery;
 
 /**
  *
@@ -34,45 +35,45 @@ public class ReservationJpaController implements Serializable {
     }
 
     public void create(Reservation reservation) {
-        if (reservation.getQosMapCollection() == null) {
-            reservation.setQosMapCollection(new ArrayList<QosMap>());
+        if (reservation.getQosmapCollection() == null) {
+            reservation.setQosmapCollection(new ArrayList<Qosmap>());
         }
-        if (reservation.getFlowMapCollection() == null) {
-            reservation.setFlowMapCollection(new ArrayList<FlowMap>());
+        if (reservation.getFlowmapCollection() == null) {
+            reservation.setFlowmapCollection(new ArrayList<Flowmap>());
         }
         EntityManager em = null;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            Collection<QosMap> attachedQosMapCollection = new ArrayList<QosMap>();
-            for (QosMap qosMapCollectionQosMapToAttach : reservation.getQosMapCollection()) {
-                qosMapCollectionQosMapToAttach = em.getReference(qosMapCollectionQosMapToAttach.getClass(), qosMapCollectionQosMapToAttach.getId());
-                attachedQosMapCollection.add(qosMapCollectionQosMapToAttach);
+            Collection<Qosmap> attachedQosmapCollection = new ArrayList<Qosmap>();
+            for (Qosmap qosmapCollectionQosmapToAttach : reservation.getQosmapCollection()) {
+                qosmapCollectionQosmapToAttach = em.getReference(qosmapCollectionQosmapToAttach.getClass(), qosmapCollectionQosmapToAttach.getId());
+                attachedQosmapCollection.add(qosmapCollectionQosmapToAttach);
             }
-            reservation.setQosMapCollection(attachedQosMapCollection);
-            Collection<FlowMap> attachedFlowMapCollection = new ArrayList<FlowMap>();
-            for (FlowMap flowMapCollectionFlowMapToAttach : reservation.getFlowMapCollection()) {
-                flowMapCollectionFlowMapToAttach = em.getReference(flowMapCollectionFlowMapToAttach.getClass(), flowMapCollectionFlowMapToAttach.getId());
-                attachedFlowMapCollection.add(flowMapCollectionFlowMapToAttach);
+            reservation.setQosmapCollection(attachedQosmapCollection);
+            Collection<Flowmap> attachedFlowmapCollection = new ArrayList<Flowmap>();
+            for (Flowmap flowmapCollectionFlowmapToAttach : reservation.getFlowmapCollection()) {
+                flowmapCollectionFlowmapToAttach = em.getReference(flowmapCollectionFlowmapToAttach.getClass(), flowmapCollectionFlowmapToAttach.getId());
+                attachedFlowmapCollection.add(flowmapCollectionFlowmapToAttach);
             }
-            reservation.setFlowMapCollection(attachedFlowMapCollection);
+            reservation.setFlowmapCollection(attachedFlowmapCollection);
             em.persist(reservation);
-            for (QosMap qosMapCollectionQosMap : reservation.getQosMapCollection()) {
-                Reservation oldResIDOfQosMapCollectionQosMap = qosMapCollectionQosMap.getResID();
-                qosMapCollectionQosMap.setResID(reservation);
-                qosMapCollectionQosMap = em.merge(qosMapCollectionQosMap);
-                if (oldResIDOfQosMapCollectionQosMap != null) {
-                    oldResIDOfQosMapCollectionQosMap.getQosMapCollection().remove(qosMapCollectionQosMap);
-                    oldResIDOfQosMapCollectionQosMap = em.merge(oldResIDOfQosMapCollectionQosMap);
+            for (Qosmap qosmapCollectionQosmap : reservation.getQosmapCollection()) {
+                Reservation oldResIDOfQosmapCollectionQosmap = qosmapCollectionQosmap.getResID();
+                qosmapCollectionQosmap.setResID(reservation);
+                qosmapCollectionQosmap = em.merge(qosmapCollectionQosmap);
+                if (oldResIDOfQosmapCollectionQosmap != null) {
+                    oldResIDOfQosmapCollectionQosmap.getQosmapCollection().remove(qosmapCollectionQosmap);
+                    oldResIDOfQosmapCollectionQosmap = em.merge(oldResIDOfQosmapCollectionQosmap);
                 }
             }
-            for (FlowMap flowMapCollectionFlowMap : reservation.getFlowMapCollection()) {
-                Reservation oldResIDOfFlowMapCollectionFlowMap = flowMapCollectionFlowMap.getResID();
-                flowMapCollectionFlowMap.setResID(reservation);
-                flowMapCollectionFlowMap = em.merge(flowMapCollectionFlowMap);
-                if (oldResIDOfFlowMapCollectionFlowMap != null) {
-                    oldResIDOfFlowMapCollectionFlowMap.getFlowMapCollection().remove(flowMapCollectionFlowMap);
-                    oldResIDOfFlowMapCollectionFlowMap = em.merge(oldResIDOfFlowMapCollectionFlowMap);
+            for (Flowmap flowmapCollectionFlowmap : reservation.getFlowmapCollection()) {
+                Reservation oldResIDOfFlowmapCollectionFlowmap = flowmapCollectionFlowmap.getResID();
+                flowmapCollectionFlowmap.setResID(reservation);
+                flowmapCollectionFlowmap = em.merge(flowmapCollectionFlowmap);
+                if (oldResIDOfFlowmapCollectionFlowmap != null) {
+                    oldResIDOfFlowmapCollectionFlowmap.getFlowmapCollection().remove(flowmapCollectionFlowmap);
+                    oldResIDOfFlowmapCollectionFlowmap = em.merge(oldResIDOfFlowmapCollectionFlowmap);
                 }
             }
             em.getTransaction().commit();
@@ -89,64 +90,64 @@ public class ReservationJpaController implements Serializable {
             em = getEntityManager();
             em.getTransaction().begin();
             Reservation persistentReservation = em.find(Reservation.class, reservation.getId());
-            Collection<QosMap> qosMapCollectionOld = persistentReservation.getQosMapCollection();
-            Collection<QosMap> qosMapCollectionNew = reservation.getQosMapCollection();
-            Collection<FlowMap> flowMapCollectionOld = persistentReservation.getFlowMapCollection();
-            Collection<FlowMap> flowMapCollectionNew = reservation.getFlowMapCollection();
+            Collection<Qosmap> qosmapCollectionOld = persistentReservation.getQosmapCollection();
+            Collection<Qosmap> qosmapCollectionNew = reservation.getQosmapCollection();
+            Collection<Flowmap> flowmapCollectionOld = persistentReservation.getFlowmapCollection();
+            Collection<Flowmap> flowmapCollectionNew = reservation.getFlowmapCollection();
             List<String> illegalOrphanMessages = null;
-            for (QosMap qosMapCollectionOldQosMap : qosMapCollectionOld) {
-                if (!qosMapCollectionNew.contains(qosMapCollectionOldQosMap)) {
+            for (Qosmap qosmapCollectionOldQosmap : qosmapCollectionOld) {
+                if (!qosmapCollectionNew.contains(qosmapCollectionOldQosmap)) {
                     if (illegalOrphanMessages == null) {
                         illegalOrphanMessages = new ArrayList<String>();
                     }
-                    illegalOrphanMessages.add("You must retain QosMap " + qosMapCollectionOldQosMap + " since its resID field is not nullable.");
+                    illegalOrphanMessages.add("You must retain Qosmap " + qosmapCollectionOldQosmap + " since its resID field is not nullable.");
                 }
             }
-            for (FlowMap flowMapCollectionOldFlowMap : flowMapCollectionOld) {
-                if (!flowMapCollectionNew.contains(flowMapCollectionOldFlowMap)) {
+            for (Flowmap flowmapCollectionOldFlowmap : flowmapCollectionOld) {
+                if (!flowmapCollectionNew.contains(flowmapCollectionOldFlowmap)) {
                     if (illegalOrphanMessages == null) {
                         illegalOrphanMessages = new ArrayList<String>();
                     }
-                    illegalOrphanMessages.add("You must retain FlowMap " + flowMapCollectionOldFlowMap + " since its resID field is not nullable.");
+                    illegalOrphanMessages.add("You must retain Flowmap " + flowmapCollectionOldFlowmap + " since its resID field is not nullable.");
                 }
             }
             if (illegalOrphanMessages != null) {
                 throw new IllegalOrphanException(illegalOrphanMessages);
             }
-            Collection<QosMap> attachedQosMapCollectionNew = new ArrayList<QosMap>();
-            for (QosMap qosMapCollectionNewQosMapToAttach : qosMapCollectionNew) {
-                qosMapCollectionNewQosMapToAttach = em.getReference(qosMapCollectionNewQosMapToAttach.getClass(), qosMapCollectionNewQosMapToAttach.getId());
-                attachedQosMapCollectionNew.add(qosMapCollectionNewQosMapToAttach);
+            Collection<Qosmap> attachedQosmapCollectionNew = new ArrayList<Qosmap>();
+            for (Qosmap qosmapCollectionNewQosmapToAttach : qosmapCollectionNew) {
+                qosmapCollectionNewQosmapToAttach = em.getReference(qosmapCollectionNewQosmapToAttach.getClass(), qosmapCollectionNewQosmapToAttach.getId());
+                attachedQosmapCollectionNew.add(qosmapCollectionNewQosmapToAttach);
             }
-            qosMapCollectionNew = attachedQosMapCollectionNew;
-            reservation.setQosMapCollection(qosMapCollectionNew);
-            Collection<FlowMap> attachedFlowMapCollectionNew = new ArrayList<FlowMap>();
-            for (FlowMap flowMapCollectionNewFlowMapToAttach : flowMapCollectionNew) {
-                flowMapCollectionNewFlowMapToAttach = em.getReference(flowMapCollectionNewFlowMapToAttach.getClass(), flowMapCollectionNewFlowMapToAttach.getId());
-                attachedFlowMapCollectionNew.add(flowMapCollectionNewFlowMapToAttach);
+            qosmapCollectionNew = attachedQosmapCollectionNew;
+            reservation.setQosmapCollection(qosmapCollectionNew);
+            Collection<Flowmap> attachedFlowmapCollectionNew = new ArrayList<Flowmap>();
+            for (Flowmap flowmapCollectionNewFlowmapToAttach : flowmapCollectionNew) {
+                flowmapCollectionNewFlowmapToAttach = em.getReference(flowmapCollectionNewFlowmapToAttach.getClass(), flowmapCollectionNewFlowmapToAttach.getId());
+                attachedFlowmapCollectionNew.add(flowmapCollectionNewFlowmapToAttach);
             }
-            flowMapCollectionNew = attachedFlowMapCollectionNew;
-            reservation.setFlowMapCollection(flowMapCollectionNew);
+            flowmapCollectionNew = attachedFlowmapCollectionNew;
+            reservation.setFlowmapCollection(flowmapCollectionNew);
             reservation = em.merge(reservation);
-            for (QosMap qosMapCollectionNewQosMap : qosMapCollectionNew) {
-                if (!qosMapCollectionOld.contains(qosMapCollectionNewQosMap)) {
-                    Reservation oldResIDOfQosMapCollectionNewQosMap = qosMapCollectionNewQosMap.getResID();
-                    qosMapCollectionNewQosMap.setResID(reservation);
-                    qosMapCollectionNewQosMap = em.merge(qosMapCollectionNewQosMap);
-                    if (oldResIDOfQosMapCollectionNewQosMap != null && !oldResIDOfQosMapCollectionNewQosMap.equals(reservation)) {
-                        oldResIDOfQosMapCollectionNewQosMap.getQosMapCollection().remove(qosMapCollectionNewQosMap);
-                        oldResIDOfQosMapCollectionNewQosMap = em.merge(oldResIDOfQosMapCollectionNewQosMap);
+            for (Qosmap qosmapCollectionNewQosmap : qosmapCollectionNew) {
+                if (!qosmapCollectionOld.contains(qosmapCollectionNewQosmap)) {
+                    Reservation oldResIDOfQosmapCollectionNewQosmap = qosmapCollectionNewQosmap.getResID();
+                    qosmapCollectionNewQosmap.setResID(reservation);
+                    qosmapCollectionNewQosmap = em.merge(qosmapCollectionNewQosmap);
+                    if (oldResIDOfQosmapCollectionNewQosmap != null && !oldResIDOfQosmapCollectionNewQosmap.equals(reservation)) {
+                        oldResIDOfQosmapCollectionNewQosmap.getQosmapCollection().remove(qosmapCollectionNewQosmap);
+                        oldResIDOfQosmapCollectionNewQosmap = em.merge(oldResIDOfQosmapCollectionNewQosmap);
                     }
                 }
             }
-            for (FlowMap flowMapCollectionNewFlowMap : flowMapCollectionNew) {
-                if (!flowMapCollectionOld.contains(flowMapCollectionNewFlowMap)) {
-                    Reservation oldResIDOfFlowMapCollectionNewFlowMap = flowMapCollectionNewFlowMap.getResID();
-                    flowMapCollectionNewFlowMap.setResID(reservation);
-                    flowMapCollectionNewFlowMap = em.merge(flowMapCollectionNewFlowMap);
-                    if (oldResIDOfFlowMapCollectionNewFlowMap != null && !oldResIDOfFlowMapCollectionNewFlowMap.equals(reservation)) {
-                        oldResIDOfFlowMapCollectionNewFlowMap.getFlowMapCollection().remove(flowMapCollectionNewFlowMap);
-                        oldResIDOfFlowMapCollectionNewFlowMap = em.merge(oldResIDOfFlowMapCollectionNewFlowMap);
+            for (Flowmap flowmapCollectionNewFlowmap : flowmapCollectionNew) {
+                if (!flowmapCollectionOld.contains(flowmapCollectionNewFlowmap)) {
+                    Reservation oldResIDOfFlowmapCollectionNewFlowmap = flowmapCollectionNewFlowmap.getResID();
+                    flowmapCollectionNewFlowmap.setResID(reservation);
+                    flowmapCollectionNewFlowmap = em.merge(flowmapCollectionNewFlowmap);
+                    if (oldResIDOfFlowmapCollectionNewFlowmap != null && !oldResIDOfFlowmapCollectionNewFlowmap.equals(reservation)) {
+                        oldResIDOfFlowmapCollectionNewFlowmap.getFlowmapCollection().remove(flowmapCollectionNewFlowmap);
+                        oldResIDOfFlowmapCollectionNewFlowmap = em.merge(oldResIDOfFlowmapCollectionNewFlowmap);
                     }
                 }
             }
@@ -180,19 +181,19 @@ public class ReservationJpaController implements Serializable {
                 throw new NonexistentEntityException("The reservation with id " + id + " no longer exists.", enfe);
             }
             List<String> illegalOrphanMessages = null;
-            Collection<QosMap> qosMapCollectionOrphanCheck = reservation.getQosMapCollection();
-            for (QosMap qosMapCollectionOrphanCheckQosMap : qosMapCollectionOrphanCheck) {
+            Collection<Qosmap> qosmapCollectionOrphanCheck = reservation.getQosmapCollection();
+            for (Qosmap qosmapCollectionOrphanCheckQosmap : qosmapCollectionOrphanCheck) {
                 if (illegalOrphanMessages == null) {
                     illegalOrphanMessages = new ArrayList<String>();
                 }
-                illegalOrphanMessages.add("This Reservation (" + reservation + ") cannot be destroyed since the QosMap " + qosMapCollectionOrphanCheckQosMap + " in its qosMapCollection field has a non-nullable resID field.");
+                illegalOrphanMessages.add("This Reservation (" + reservation + ") cannot be destroyed since the Qosmap " + qosmapCollectionOrphanCheckQosmap + " in its qosmapCollection field has a non-nullable resID field.");
             }
-            Collection<FlowMap> flowMapCollectionOrphanCheck = reservation.getFlowMapCollection();
-            for (FlowMap flowMapCollectionOrphanCheckFlowMap : flowMapCollectionOrphanCheck) {
+            Collection<Flowmap> flowmapCollectionOrphanCheck = reservation.getFlowmapCollection();
+            for (Flowmap flowmapCollectionOrphanCheckFlowmap : flowmapCollectionOrphanCheck) {
                 if (illegalOrphanMessages == null) {
                     illegalOrphanMessages = new ArrayList<String>();
                 }
-                illegalOrphanMessages.add("This Reservation (" + reservation + ") cannot be destroyed since the FlowMap " + flowMapCollectionOrphanCheckFlowMap + " in its flowMapCollection field has a non-nullable resID field.");
+                illegalOrphanMessages.add("This Reservation (" + reservation + ") cannot be destroyed since the Flowmap " + flowmapCollectionOrphanCheckFlowmap + " in its flowmapCollection field has a non-nullable resID field.");
             }
             if (illegalOrphanMessages != null) {
                 throw new IllegalOrphanException(illegalOrphanMessages);
@@ -216,7 +217,12 @@ public class ReservationJpaController implements Serializable {
 
     private List<Reservation> findReservationEntities(boolean all, int maxResults, int firstResult) {
         EntityManager em = getEntityManager();
-        try {
+        TypedQuery<Reservation> query = em.createNamedQuery("Reservation.findAllOrderedByStartDate", Reservation.class);
+        List<Reservation> results = query.getResultList();
+        em.close();
+        return results;
+        
+        /*try {
             CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
             cq.select(cq.from(Reservation.class));
             Query q = em.createQuery(cq);
@@ -227,7 +233,7 @@ public class ReservationJpaController implements Serializable {
             return q.getResultList();
         } finally {
             em.close();
-        }
+        }*/
     }
 
     public Reservation findReservation(Integer id) {

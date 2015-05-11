@@ -43,6 +43,7 @@ public class StatisticsThread extends Thread {
                 Thread.currentThread().interrupt();
             }
             //get interface statistics
+            System.out.println("GET IFACE INFO");
             MyJson.sendGet(Constants.iface, qc);
         }
 

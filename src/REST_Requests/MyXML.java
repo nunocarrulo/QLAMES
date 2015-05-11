@@ -79,7 +79,7 @@ public class MyXML {
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
 
             // Create Http connection
-            System.out.println("Opening connection...");
+            //System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
             // Set connection properties
@@ -101,7 +101,7 @@ public class MyXML {
             //normalize document
             doc.getDocumentElement().normalize();
             
-            System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+            //System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
             
             switch(type){
                 case 1:
@@ -157,7 +157,7 @@ public class MyXML {
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
 
             // Create Http connection
-            System.out.println("Opening connection...");
+            //System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
             if (debug) {
@@ -173,7 +173,7 @@ public class MyXML {
             //connection.setUseCaches(false);
             connection.setDoInput(true);
             connection.setDoOutput(true);
-            System.out.println("Setting connection properties and data...");
+            //System.out.println("Setting connection properties and data...");
             
             //normalize document
             xmlDoc.getDocumentElement().normalize();
@@ -186,7 +186,8 @@ public class MyXML {
             os.writeBytes(getStringFromDoc(xmlDoc));
             
             GeneralStatistics.flowSignOverhead += getStringFromDoc(xmlDoc).length();
-            
+
+            long startTime = System.nanoTime();
             os.flush();
             os.close();
 
@@ -195,8 +196,12 @@ public class MyXML {
             
             // Get the response code
             InputStream xml = connection.getInputStream();
-
+            long endTime = System.nanoTime();
+            GeneralStatistics.odlFlowDuration += (endTime - startTime) / 1000000.0;
+            GeneralStatistics.flowDuration -= (endTime - startTime) / 1000000.0;    //decrement time from request that belongs to odl
+            
             int status = connection.getResponseCode();
+           
             if (debug) {
                 System.out.println("Status: " + status);
             }
@@ -249,7 +254,7 @@ public class MyXML {
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
 
             // Create Http connection
-            System.out.println("Opening connection...");
+            //System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
             // Set connection properties
@@ -287,7 +292,7 @@ public class MyXML {
     }
     
     private static Document createFlow(boolean useQueue, boolean arp, FlowConfig fc) {
-        System.out.println("Creating Flow with id= "+fc.getFlowID());
+        //System.out.println("Creating Flow with id= "+fc.getFlowID());
         
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();

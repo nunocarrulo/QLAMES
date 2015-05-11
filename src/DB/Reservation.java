@@ -31,10 +31,12 @@ import javax.xml.bind.annotation.XmlTransient;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "Reservation.findAll", query = "SELECT r FROM Reservation r"),
+    @NamedQuery(name = "Reservation.findAllOrderedByStartDate", query = "SELECT r FROM Reservation r ORDER BY r.startDate"),
     @NamedQuery(name = "Reservation.findById", query = "SELECT r FROM Reservation r WHERE r.id = :id"),
     @NamedQuery(name = "Reservation.findBySrcIP", query = "SELECT r FROM Reservation r WHERE r.srcIP = :srcIP"),
     @NamedQuery(name = "Reservation.findByDstIP", query = "SELECT r FROM Reservation r WHERE r.dstIP = :dstIP"),
     @NamedQuery(name = "Reservation.findByPriority", query = "SELECT r FROM Reservation r WHERE r.priority = :priority"),
+    @NamedQuery(name = "Reservation.findByFlowPrio", query = "SELECT r FROM Reservation r WHERE r.flowPrio = :flowPrio"),
     @NamedQuery(name = "Reservation.findByMinBW", query = "SELECT r FROM Reservation r WHERE r.minBW = :minBW"),
     @NamedQuery(name = "Reservation.findByMaxBW", query = "SELECT r FROM Reservation r WHERE r.maxBW = :maxBW"),
     @NamedQuery(name = "Reservation.findByStartDate", query = "SELECT r FROM Reservation r WHERE r.startDate = :startDate"),
@@ -53,6 +55,8 @@ public class Reservation implements Serializable {
     @Basic(optional = false)
     private int priority;
     @Basic(optional = false)
+    private int flowPrio;
+    @Basic(optional = false)
     private int minBW;
     private Integer maxBW;
     @Basic(optional = false)
@@ -64,9 +68,9 @@ public class Reservation implements Serializable {
     @Basic(optional = false)
     private boolean applied;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "resID", fetch = FetchType.LAZY)
-    private Collection<QosMap> qosMapCollection;
+    private Collection<Qosmap> qosmapCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "resID", fetch = FetchType.LAZY)
-    private Collection<FlowMap> flowMapCollection;
+    private Collection<Flowmap> flowmapCollection;
 
     public Reservation() {
     }
@@ -88,6 +92,18 @@ public class Reservation implements Serializable {
         this.srcIP = srcIP;
         this.dstIP = dstIP;
         this.priority = priority;
+        this.flowPrio = 10; //default
+        this.minBW = minBW;
+        this.maxBW = maxBW;
+        this.startDate = startDate;
+        this.endDate = endDate;
+    }
+    
+    public Reservation(String srcIP, String dstIP, int priority, int flowPrio, int minBW, int maxBW, Date startDate, Date endDate) {
+        this.srcIP = srcIP;
+        this.dstIP = dstIP;
+        this.priority = priority;
+        this.flowPrio = flowPrio;
         this.minBW = minBW;
         this.maxBW = maxBW;
         this.startDate = startDate;
@@ -99,6 +115,19 @@ public class Reservation implements Serializable {
         this.srcIP = srcIP;
         this.dstIP = dstIP;
         this.priority = priority;
+        this.flowPrio = 10; //default
+        this.minBW = minBW;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.applied = applied;
+    }
+    
+    public Reservation(Integer id, String srcIP, String dstIP, int priority, int flowPrio, int minBW, Date startDate, Date endDate, boolean applied) {
+        this.id = id;
+        this.srcIP = srcIP;
+        this.dstIP = dstIP;
+        this.priority = priority;
+        this.flowPrio = flowPrio;
         this.minBW = minBW;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -135,6 +164,14 @@ public class Reservation implements Serializable {
 
     public void setPriority(int priority) {
         this.priority = priority;
+    }
+
+    public int getFlowPrio() {
+        return flowPrio;
+    }
+
+    public void setFlowPrio(int flowPrio) {
+        this.flowPrio = flowPrio;
     }
 
     public int getMinBW() {
@@ -178,21 +215,21 @@ public class Reservation implements Serializable {
     }
 
     @XmlTransient
-    public Collection<QosMap> getQosMapCollection() {
-        return qosMapCollection;
+    public Collection<Qosmap> getQosmapCollection() {
+        return qosmapCollection;
     }
 
-    public void setQosMapCollection(Collection<QosMap> qosMapCollection) {
-        this.qosMapCollection = qosMapCollection;
+    public void setQosmapCollection(Collection<Qosmap> qosmapCollection) {
+        this.qosmapCollection = qosmapCollection;
     }
 
     @XmlTransient
-    public Collection<FlowMap> getFlowMapCollection() {
-        return flowMapCollection;
+    public Collection<Flowmap> getFlowmapCollection() {
+        return flowmapCollection;
     }
 
-    public void setFlowMapCollection(Collection<FlowMap> flowMapCollection) {
-        this.flowMapCollection = flowMapCollection;
+    public void setFlowmapCollection(Collection<Flowmap> flowmapCollection) {
+        this.flowmapCollection = flowmapCollection;
     }
 
     @Override

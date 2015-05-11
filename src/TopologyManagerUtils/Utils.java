@@ -51,10 +51,11 @@ public class Utils {
     public static List<String> ovledLinks = new ArrayList<>(); // <switch,port> values
     public static boolean LINK_OVL = false; //some link overloaded
     public static List<ReservPath> ReservPathList = new ArrayList<>();
-    public static final boolean debug = true;
+    public static final boolean debug = false;
     public static String qosUUID;
     public static String queueUUID;
     public static int counter = 1;
+    public static boolean compPrio = false;
     public static boolean firstTime = true;
 
     public static void decodeTopology(Document doc) {
@@ -296,7 +297,7 @@ public class Utils {
 
         synchronized (lol) {
             long startTime = System.nanoTime();
-            System.out.println("*******************************************************************");
+            //System.out.println("*******************************************************************");
             for (TopoNode tn : Utils.topo.getAllSwitches()) {
                 for (Port p : tn.getAllPorts()) {
                     
@@ -320,25 +321,31 @@ public class Utils {
 
                         //update interface statistics on port
                         p.getiFaceStats().setIfaceStatistics(collisions, rx_bytes, rx_packets, rx_dropped, rx_errors, tx_bytes, tx_packets, tx_dropped, tx_errors);
+                        int bw = 0;
                         if (p.getiFaceStats().getTx_bytes() >= p.getiFaceStats().getLastTx_bytes()) {
-                            System.out.println("Curr " + p.getiFaceStats().getTx_bytes() + " Last " + p.getiFaceStats().getLastTx_bytes());
-                            int bw = (int) (((p.getiFaceStats().getTx_bytes() - p.getiFaceStats().getLastTx_bytes())) / 5); //kbps 5 because every 5sec
+                            //System.out.println("Curr " + p.getiFaceStats().getTx_bytes() + " Last " + p.getiFaceStats().getLastTx_bytes());
+                            bw = (int) (((p.getiFaceStats().getTx_bytes() - p.getiFaceStats().getLastTx_bytes())) / 5); //kbps 5 because every 5sec
                             p.updateCurrLoad(bw);
+                            
                         } else {
-                            System.out.println("Last tx bytes < current tx bytes");
+                            //System.out.println("Last tx bytes < current tx bytes");
                         }
 
                         /* Verify congestioned links every 10 min */
                         //if(counter == p.getCurrBWHistory().getSize()){
                             /* Verify if link is overloaded (avgLinkLoad > 80% of LinkSpeed) */
                         //if( p.getCurrBWHistory().calcAvg() > 0.8 * p.getLinkSpeed() ){
+                        
+                        if(debug)
+                            System.out.println("Port: "+p.getPortID()+" Curr(prev) value (kbps) : "+p.getCurrBWHistory().getPrev()+" Avg : "+p.getCurrBWHistory().calcAvg());
+                        
                         if (!firstTime) {
-                            if (p.getCurrBWHistory().getPrev() > 0.8 * p.getLinkSpeed()) {
-                                System.out.println("Curr(prev) value(kbps): " + p.getCurrBWHistory().getPrev());
+                            if (p.getCurrBWHistory().getPrev() > 0.9 * p.getLinkSpeed()) {
+                                //System.out.println("Port: "+p.getPortID()+" Curr(prev) value (kbps) : "+p.getCurrBWHistory().getPrev()+" Avg : "+p.getCurrBWHistory().calcAvg());
                                 ovledLinks.add(p.getPortID());        // add port to ovledLinks
                                 LINK_OVL = true;            // some link is overloaded
                                 counter = 0; //reset counter
-                                System.out.println("FOUND A CONGESTIONED LINK: " + p.getPortID() + " !");
+                                //System.out.println("FOUND A CONGESTIONED LINK: " + p.getPortID() + " !");
                             } else {
                                 //remove from ovled links if was put there
                                 if (ovledLinks.contains(p.getPortID())) {
@@ -349,8 +356,8 @@ public class Utils {
                         }
 
                         counter++;
-                        System.out.println("Switch " + tn.getId() + " Port: " + p.getPortID() + " with iface: " + p.getIfaceUUID()
-                                + " Current Link Load (kbps): " + p.getCurrBwLoad() + " Avg Link Load(kbps): " + p.getCurrBWHistory().getAverage());
+                        //System.out.println("Switch " + tn.getId() + " Port: " + p.getPortID() + " with iface: " + p.getIfaceUUID()
+                        //        + " Current Link Load (kbps): " + p.getCurrBwLoad() + " Avg Link Load(kbps): " + p.getCurrBWHistory().getAverage());
 
                         if (debug) {
                             System.out.println(p.getiFaceStats().toString());
@@ -363,7 +370,7 @@ public class Utils {
             if (firstTime) {
                 firstTime = false;
             }
-            System.out.println("*******************************************************************");
+            //System.out.println("*******************************************************************");
             
             long endTime = System.nanoTime();
             GeneralStatistics.lbDuration += (endTime - startTime) / 1000000.0;

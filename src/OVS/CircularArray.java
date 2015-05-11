@@ -28,11 +28,12 @@ public class CircularArray {
     }
 
     public long calcAvg() {
+        average = 0;
         for (int i = 0; i < size; i++) {
             average += array[i];
         }
 
-        return average;
+        return (long) (average/size);
     }
     
     public long getPrev(){

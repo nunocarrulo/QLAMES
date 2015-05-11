@@ -35,7 +35,7 @@ public class TestODL {
         /* Getting Ovs Node Id info */
         MyJson.sendGet(Constants.node, null);
         String ovsid = Constants.ovsID;
-        
+        System.out.println("ovsID: "+ovsid);
         System.out.println("-----------------DELETING QOS ROWS----------------------");
         try (BufferedReader br = new BufferedReader(new FileReader("qosUUID.txt"))) {
             String line;

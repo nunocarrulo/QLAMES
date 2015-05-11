@@ -51,8 +51,8 @@ public class DijkstraOps {
         /* Creating edges for each vertex*/
         for (TopoNode tn : Utils.topo.getAllNodes()) {
             for (NodeCon nc : tn.getNodeCon()) {
-                System.out.println("TopoNode ID: " + tn.getId() + " Target: " + nc.getDstNodeId() + " from "
-                        + nc.getFrom() + " to " + nc.getTo());
+                //System.out.println("TopoNode ID: " + tn.getId() + " Target: " + nc.getDstNodeId() + " from "
+                //        + nc.getFrom() + " to " + nc.getTo());
                 Vertex lol = findVertex(tn.getId());
                 if (lol == null) {
                     System.out.println("Error, null Vertex.");
@@ -92,9 +92,9 @@ public class DijkstraOps {
             System.exit(0);
         }
         computePaths(src);
-        System.out.println("Distance to " + target + ": " + target.minDistance);
+        //System.out.println("Distance to " + target + ": " + target.minDistance);
         List<Vertex> path = getShortestPathTo(target);
-        System.out.println("Path: " + path);
+        //System.out.println("Path: " + path);
 
     }
 
@@ -114,8 +114,8 @@ public class DijkstraOps {
         /* Creating edges for each vertex*/
         for (TopoNode tn : Utils.topo.getAllNodes()) {
             for (NodeCon nc : tn.getNodeCon()) {
-                System.out.println("TopoNode ID: " + tn.getId() + " Target: " + nc.getDstNodeId() + " from "
-                        + nc.getFrom() + " to " + nc.getTo());
+                //System.out.println("TopoNode ID: " + tn.getId() + " Target: " + nc.getDstNodeId() + " from "
+                //        + nc.getFrom() + " to " + nc.getTo());
                 Vertex lol = findVertex(tn.getId());
                 if (lol == null) {
                     System.out.println("Error, null Vertex.");
@@ -148,7 +148,7 @@ public class DijkstraOps {
         boolean foundDst = false;
 
         for (Vertex vertice : vertices) {
-            System.out.println("DijktraOps: Vertice=" + vertice.name + " Source= " + Utils.topo.getHostByIP(source) + " target " + Utils.topo.getHostByIP(dest));
+            //System.out.println("DijktraOps: Vertice=" + vertice.name + " Source= " + Utils.topo.getHostByIP(source) + " target " + Utils.topo.getHostByIP(dest));
 
             if (Utils.topo.getHostByIP(source).equals(vertice.name)) {
                 src = vertice;
@@ -166,9 +166,9 @@ public class DijkstraOps {
             System.out.println("Source or target were not found! Exiting...");
             System.exit(0);
         }
-        System.out.println("Computing paths");
+        //System.out.println("Computing paths");
         computePaths(src);
-        if (true) {
+        if (debug) {
             System.out.println("Distance to " + target + ": " + target.minDistance);
         }
 
@@ -238,7 +238,7 @@ public class DijkstraOps {
         parsedPath.remove(0); //parsedPath.remove(parsedPath.size()-1);
         revParsedPath.remove(0); //revParsedPath.remove(revParsedPath.size()-1);
 
-        if (true) {
+        if (debug) {
             System.out.println("Up Path:");
             for (int i = 0; i < parsedPath.size() - 1; i++) {
                 System.out.println("SwID " + parsedPath.get(i).getSwID() + " to target " + parsedPath.get(i + 1).getSwID() + " via " + parsedPath.get(i).getPortNumber());
@@ -278,7 +278,7 @@ public class DijkstraOps {
             dcpaths.setRevPath(down);
             dcPaths.add(dcpaths);
         }
-        System.out.println("Parsed Path done!");
+        //System.out.println("Parsed Path done!");
     }
 
     public static void getExistingPath(String source, String dest){
@@ -286,16 +286,16 @@ public class DijkstraOps {
             if(dcp.getDestNode().equals(dest) && dcp.getSourceNode().equals(source)){
                 parsedPath = dcp.getPath();
                 revParsedPath = dcp.getRevPath();
-                System.out.println("Found Existing Path");
+                //System.out.println("Found Existing Path");
                 return;
             }else if(dcp.getDestNode().equals(source) && dcp.getSourceNode().equals(dest)){
                 revParsedPath = dcp.getPath();
                 parsedPath = dcp.getRevPath();
-                System.out.println("Found Existing Path upside down");
+                //System.out.println("Found Existing Path upside down");
                 return;
             }
         }
-        System.out.println("There are no existing paths between those nodes. Searching using Dijkstra");
+        //System.out.println("There are no existing paths between those nodes. Searching using Dijkstra");
         findPath(source, dest);
     }
     
@@ -312,7 +312,7 @@ public class DijkstraOps {
             if (v.name.equals(swID)) {
                 for (Edge e : v.adjacencies) {
                     if (e.link.equals(portID)) {
-                        System.out.println("Edge found and updated");
+                        //System.out.println("Edge found and updated");
                         e.weight = weight;
                     }
                 }
@@ -331,7 +331,7 @@ public class DijkstraOps {
         for (Vertex v : vertices) {
             for (Edge e : v.adjacencies) {
                 e.weight = Utils.topo.getNode(v.name).getPort(e.link).getCurrLoad();    //average after
-                System.out.println("Node " + v.name + " port " + e.link + " current load " + e.weight);
+                //System.out.println("Node " + v.name + " port " + e.link + " current load " + e.weight);
             }
         }
     }

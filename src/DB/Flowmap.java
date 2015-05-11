@@ -25,14 +25,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Entity
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "QosMap.findAll", query = "SELECT q FROM QosMap q"),
-    @NamedQuery(name = "QosMap.findById", query = "SELECT q FROM QosMap q WHERE q.id = :id"),
-    @NamedQuery(name = "QosMap.findBySwID", query = "SELECT q FROM QosMap q WHERE q.swID = :swID"),
-    @NamedQuery(name = "QosMap.findByPortID", query = "SELECT q FROM QosMap q WHERE q.portID = :portID"),
-    @NamedQuery(name = "QosMap.findByPortUUID", query = "SELECT q FROM QosMap q WHERE q.portUUID = :portUUID"),
-    @NamedQuery(name = "QosMap.findByQosUUID", query = "SELECT q FROM QosMap q WHERE q.qosUUID = :qosUUID"),
-    @NamedQuery(name = "QosMap.findByQueueUUID", query = "SELECT q FROM QosMap q WHERE q.queueUUID = :queueUUID")})
-public class QosMap implements Serializable {
+    @NamedQuery(name = "Flowmap.findAll", query = "SELECT f FROM Flowmap f"),
+    @NamedQuery(name = "Flowmap.findById", query = "SELECT f FROM Flowmap f WHERE f.id = :id"),
+    @NamedQuery(name = "Flowmap.findBySwID", query = "SELECT f FROM Flowmap f WHERE f.swID = :swID"),
+    @NamedQuery(name = "Flowmap.findByPortID", query = "SELECT f FROM Flowmap f WHERE f.portID = :portID"),
+    @NamedQuery(name = "Flowmap.findByTableID", query = "SELECT f FROM Flowmap f WHERE f.tableID = :tableID"),
+    @NamedQuery(name = "Flowmap.findByFlowID", query = "SELECT f FROM Flowmap f WHERE f.flowID = :flowID")})
+public class Flowmap implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,37 +42,33 @@ public class QosMap implements Serializable {
     @Basic(optional = false)
     private String portID;
     @Basic(optional = false)
-    private String portUUID;
+    private int tableID;
     @Basic(optional = false)
-    private String qosUUID;
-    @Basic(optional = false)
-    private String queueUUID;
+    private int flowID;
     @JoinColumn(name = "resID", referencedColumnName = "ID")
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Reservation resID;
 
-    public QosMap() {
+    public Flowmap() {
     }
 
-    public QosMap(Integer id) {
+    public Flowmap(Integer id) {
         this.id = id;
     }
 
-    public QosMap(String swID, String portID, String portUUID, String qosUUID, String queueUUID) {
+    public Flowmap(String swID, String portID, int tableID, int flowID) {
         this.swID = swID;
         this.portID = portID;
-        this.portUUID = portUUID;
-        this.qosUUID = qosUUID;
-        this.queueUUID = queueUUID;
+        this.tableID = tableID;
+        this.flowID = flowID;
     }
     
-    public QosMap(Integer id, String swID, String portID, String portUUID, String qosUUID, String queueUUID) {
+    public Flowmap(Integer id, String swID, String portID, int tableID, int flowID) {
         this.id = id;
         this.swID = swID;
         this.portID = portID;
-        this.portUUID = portUUID;
-        this.qosUUID = qosUUID;
-        this.queueUUID = queueUUID;
+        this.tableID = tableID;
+        this.flowID = flowID;
     }
 
     public Integer getId() {
@@ -100,28 +95,20 @@ public class QosMap implements Serializable {
         this.portID = portID;
     }
 
-    public String getPortUUID() {
-        return portUUID;
+    public int getTableID() {
+        return tableID;
     }
 
-    public void setPortUUID(String portUUID) {
-        this.portUUID = portUUID;
+    public void setTableID(int tableID) {
+        this.tableID = tableID;
     }
 
-    public String getQosUUID() {
-        return qosUUID;
+    public int getFlowID() {
+        return flowID;
     }
 
-    public void setQosUUID(String qosUUID) {
-        this.qosUUID = qosUUID;
-    }
-
-    public String getQueueUUID() {
-        return queueUUID;
-    }
-
-    public void setQueueUUID(String queueUUID) {
-        this.queueUUID = queueUUID;
+    public void setFlowID(int flowID) {
+        this.flowID = flowID;
     }
 
     public Reservation getResID() {
@@ -142,10 +129,10 @@ public class QosMap implements Serializable {
     @Override
     public boolean equals(Object object) {
         // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof QosMap)) {
+        if (!(object instanceof Flowmap)) {
             return false;
         }
-        QosMap other = (QosMap) object;
+        Flowmap other = (Flowmap) object;
         if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
@@ -154,7 +141,7 @@ public class QosMap implements Serializable {
 
     @Override
     public String toString() {
-        return "DB.QosMap[ id=" + id + " ]";
+        return "DB.Flowmap[ id=" + id + " ]";
     }
     
 }

@@ -38,7 +38,7 @@ public class Port implements IPort {
         queues = new ArrayList<>();
         iFaceStats = new IfaceStatistics();
         state = UP;
-        currBWHistory = new CircularArray(60); //10min = 60*10
+        currBWHistory = new CircularArray(60); //5min = 60*5
         linkSpeed = 100000;
     }
 
@@ -60,11 +60,11 @@ public class Port implements IPort {
         for (Queue q : queues) {
             if (q.getUuid().equals(qUUID)) {
                 queues.remove(q);
-                System.out.println("Queue: " + qUUID + " removed successfully");
+                //System.out.println("Queue: " + qUUID + " removed successfully");
                 return true;
             }
         }
-        System.out.println("Queue: " + qUUID + " not found in Port: " + portID);
+        //System.out.println("Queue: " + qUUID + " not found in Port: " + portID);
         return false;
 
     }

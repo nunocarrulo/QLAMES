@@ -5,6 +5,7 @@
  */
 package Dijkstra;
 
+import static TopologyManagerUtils.Utils.compPrio;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,10 +13,11 @@ import java.util.List;
  *
  * @author nuno
  */
-public class ReservPath {
+public class ReservPath implements Comparable<ReservPath>{
 
     private int resID;
     private String srcIP, dstIP;
+    private int minRate, maxRate, priority;
     private List<ParsedPath> path;
     private List<ParsedPath> revPath;
 
@@ -78,6 +80,29 @@ public class ReservPath {
     public String getDstIP() {
         return dstIP;
     }
+
+    public int getMinRate() {
+        return minRate;
+    }
+
+    public void setRates(int minRate, int maxRate) {
+        this.minRate = minRate;
+        this.maxRate = maxRate;
+    }
+
+    public int getMaxRate() {
+        return maxRate;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+    
+    
     
     @Override
     public String toString() {
@@ -92,6 +117,18 @@ public class ReservPath {
         }
 
         return ret;
+    }
+
+    @Override
+    public int compareTo(ReservPath t) {
+        
+        /* Ascending order*/
+        if(compPrio){
+            return this.priority-t.getPriority();
+        }else{
+            return this.maxRate-t.getMaxRate();
+        }
+        
     }
 
 }

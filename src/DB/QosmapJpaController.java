@@ -19,9 +19,9 @@ import javax.persistence.criteria.Root;
  *
  * @author nuno
  */
-public class FlowMapJpaController implements Serializable {
+public class QosmapJpaController implements Serializable {
 
-    public FlowMapJpaController(EntityManagerFactory emf) {
+    public QosmapJpaController(EntityManagerFactory emf) {
         this.emf = emf;
     }
     private EntityManagerFactory emf = null;
@@ -30,19 +30,19 @@ public class FlowMapJpaController implements Serializable {
         return emf.createEntityManager();
     }
 
-    public void create(FlowMap flowMap) {
+    public void create(Qosmap qosmap) {
         EntityManager em = null;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            Reservation resID = flowMap.getResID();
+            Reservation resID = qosmap.getResID();
             if (resID != null) {
                 resID = em.getReference(resID.getClass(), resID.getId());
-                flowMap.setResID(resID);
+                qosmap.setResID(resID);
             }
-            em.persist(flowMap);
+            em.persist(qosmap);
             if (resID != null) {
-                resID.getFlowMapCollection().add(flowMap);
+                resID.getQosmapCollection().add(qosmap);
                 resID = em.merge(resID);
             }
             em.getTransaction().commit();
@@ -53,34 +53,34 @@ public class FlowMapJpaController implements Serializable {
         }
     }
 
-    public void edit(FlowMap flowMap) throws NonexistentEntityException, Exception {
+    public void edit(Qosmap qosmap) throws NonexistentEntityException, Exception {
         EntityManager em = null;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            FlowMap persistentFlowMap = em.find(FlowMap.class, flowMap.getId());
-            Reservation resIDOld = persistentFlowMap.getResID();
-            Reservation resIDNew = flowMap.getResID();
+            Qosmap persistentQosmap = em.find(Qosmap.class, qosmap.getId());
+            Reservation resIDOld = persistentQosmap.getResID();
+            Reservation resIDNew = qosmap.getResID();
             if (resIDNew != null) {
                 resIDNew = em.getReference(resIDNew.getClass(), resIDNew.getId());
-                flowMap.setResID(resIDNew);
+                qosmap.setResID(resIDNew);
             }
-            flowMap = em.merge(flowMap);
+            qosmap = em.merge(qosmap);
             if (resIDOld != null && !resIDOld.equals(resIDNew)) {
-                resIDOld.getFlowMapCollection().remove(flowMap);
+                resIDOld.getQosmapCollection().remove(qosmap);
                 resIDOld = em.merge(resIDOld);
             }
             if (resIDNew != null && !resIDNew.equals(resIDOld)) {
-                resIDNew.getFlowMapCollection().add(flowMap);
+                resIDNew.getQosmapCollection().add(qosmap);
                 resIDNew = em.merge(resIDNew);
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
-                Integer id = flowMap.getId();
-                if (findFlowMap(id) == null) {
-                    throw new NonexistentEntityException("The flowMap with id " + id + " no longer exists.");
+                Integer id = qosmap.getId();
+                if (findQosmap(id) == null) {
+                    throw new NonexistentEntityException("The qosmap with id " + id + " no longer exists.");
                 }
             }
             throw ex;
@@ -96,19 +96,19 @@ public class FlowMapJpaController implements Serializable {
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            FlowMap flowMap;
+            Qosmap qosmap;
             try {
-                flowMap = em.getReference(FlowMap.class, id);
-                flowMap.getId();
+                qosmap = em.getReference(Qosmap.class, id);
+                qosmap.getId();
             } catch (EntityNotFoundException enfe) {
-                throw new NonexistentEntityException("The flowMap with id " + id + " no longer exists.", enfe);
+                throw new NonexistentEntityException("The qosmap with id " + id + " no longer exists.", enfe);
             }
-            Reservation resID = flowMap.getResID();
+            Reservation resID = qosmap.getResID();
             if (resID != null) {
-                resID.getFlowMapCollection().remove(flowMap);
+                resID.getQosmapCollection().remove(qosmap);
                 resID = em.merge(resID);
             }
-            em.remove(flowMap);
+            em.remove(qosmap);
             em.getTransaction().commit();
         } finally {
             if (em != null) {
@@ -117,19 +117,19 @@ public class FlowMapJpaController implements Serializable {
         }
     }
 
-    public List<FlowMap> findFlowMapEntities() {
-        return findFlowMapEntities(true, -1, -1);
+    public List<Qosmap> findQosmapEntities() {
+        return findQosmapEntities(true, -1, -1);
     }
 
-    public List<FlowMap> findFlowMapEntities(int maxResults, int firstResult) {
-        return findFlowMapEntities(false, maxResults, firstResult);
+    public List<Qosmap> findQosmapEntities(int maxResults, int firstResult) {
+        return findQosmapEntities(false, maxResults, firstResult);
     }
 
-    private List<FlowMap> findFlowMapEntities(boolean all, int maxResults, int firstResult) {
+    private List<Qosmap> findQosmapEntities(boolean all, int maxResults, int firstResult) {
         EntityManager em = getEntityManager();
         try {
             CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
-            cq.select(cq.from(FlowMap.class));
+            cq.select(cq.from(Qosmap.class));
             Query q = em.createQuery(cq);
             if (!all) {
                 q.setMaxResults(maxResults);
@@ -141,20 +141,20 @@ public class FlowMapJpaController implements Serializable {
         }
     }
 
-    public FlowMap findFlowMap(Integer id) {
+    public Qosmap findQosmap(Integer id) {
         EntityManager em = getEntityManager();
         try {
-            return em.find(FlowMap.class, id);
+            return em.find(Qosmap.class, id);
         } finally {
             em.close();
         }
     }
 
-    public int getFlowMapCount() {
+    public int getQosmapCount() {
         EntityManager em = getEntityManager();
         try {
             CriteriaQuery cq = em.getCriteriaBuilder().createQuery();
-            Root<FlowMap> rt = cq.from(FlowMap.class);
+            Root<Qosmap> rt = cq.from(Qosmap.class);
             cq.select(em.getCriteriaBuilder().count(rt));
             Query q = em.createQuery(cq);
             return ((Long) q.getSingleResult()).intValue();

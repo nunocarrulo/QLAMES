@@ -221,7 +221,7 @@ public class MyJson {
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
 
             // Create Http connection
-            System.out.println("Opening connection...");
+            //System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
             if (debug) {
@@ -237,16 +237,17 @@ public class MyJson {
             //connection.setUseCaches(false);
             connection.setDoInput(true);
             connection.setDoOutput(true);
-            System.out.println("Setting connection properties and data...");
+            //System.out.println("Setting connection properties and data...");
 
             if (debug) {
                 System.out.println("Request: " + data.toString());
             }
-
+            long startTime;
             try ( // Set data to send and close channel
                 DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
                 os.writeBytes(data.toString());
                 GeneralStatistics.queueSignOverhead += data.toString().length();
+                startTime = System.nanoTime();
                 os.flush();
             }
 
@@ -256,7 +257,10 @@ public class MyJson {
 
             // Get the response code
             InputStream jsonIS = connection.getInputStream();
-
+            long endTime = System.nanoTime();
+            GeneralStatistics.odlQosDuration += (endTime - startTime) / 1000000.0;
+            //GeneralStatistics.queueDuration -= (endTime - startTime) / 1000000.0;    //decrement time from request that belongs to odl
+            
             int status = connection.getResponseCode();
             if (debug) {
                 System.out.println("Status: " + status);
@@ -264,9 +268,9 @@ public class MyJson {
 
             if (status != Constants.CREATED) {
                 if (queue) {
-                    System.out.println("Error creating Queue row. Status: " + status);
+                    //System.out.println("Error creating Queue row. Status: " + status);
                 } else {
-                    System.out.println("Error creating QoS row. Status: " + status);
+                    //System.out.println("Error creating QoS row. Status: " + status);
                 }
                 return false;
             }
@@ -338,7 +342,7 @@ public class MyJson {
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
             
             // Create Http connection
-            System.out.println("Opening connection...");
+            //System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
             if (false) {
@@ -354,16 +358,17 @@ public class MyJson {
             //connection.setUseCaches(false);
             connection.setDoInput(true);
             connection.setDoOutput(true);
-            System.out.println("Setting connection properties and data...");
+            //System.out.println("Setting connection properties and data...");
 
             if (debug) {
                 System.out.println("Request: " + data.toString());
             }
-            
+            long startTime;
             try ( // Set data to send and close channel
                     DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
                 os.writeBytes(data.toString());
                 GeneralStatistics.queueSignOverhead += data.toString().length();
+                startTime = System.nanoTime();
                 os.flush();
             }
 
@@ -373,7 +378,10 @@ public class MyJson {
             
             // Get the response code
             InputStream jsonIS = connection.getInputStream();
-
+            long endTime = System.nanoTime();
+            GeneralStatistics.odlQosDuration += (endTime - startTime) / 1000000.0;
+            //GeneralStatistics.queueDuration -= (endTime - startTime) / 1000000.0;    //decrement time from request that belongs to odl
+            
             int status = connection.getResponseCode();
             if (debug) {
                 System.out.println("Status: " + status);
@@ -437,7 +445,7 @@ public class MyJson {
             String encodedAuthStr = Base64.encodeBase64String(authStr.getBytes());
 
             // Create Http connection
-            System.out.println("Opening connection...");
+            //System.out.println("Opening connection...");
             connection = (HttpURLConnection) url.openConnection();
 
             // Set connection properties
@@ -454,13 +462,13 @@ public class MyJson {
             //InputStream xml = connection.getInputStream();
             int status = connection.getResponseCode();
             if (true) {
-                System.out.println("Status: " + status);
+                //System.out.println("Status: " + status);
             }
 
             if (status != Constants.NO_CONTENT) {
                 return false;
             }
-            if (true) {
+            if (false) {
                 if (type == 1) {
                     System.out.println("Queue row deleted with success");
                 } else {
@@ -584,7 +592,7 @@ public class MyJson {
             row.put("QoS", qos);            //incorporate qos on row
             data.put("row", row);           //incorporate row on root
 
-            System.out.println("Request print\n" + data.toString());
+            //System.out.println("Request print\n" + data.toString());
             return data;
         } catch (JSONException ex) {
             System.out.println("Exception " + ex);
