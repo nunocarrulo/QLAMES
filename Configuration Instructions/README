@@ -1,0 +1,45 @@
+This file provides the configuration instructions for the controller and for the mininet virtual machine.
+
+Controller:
+	-Download:
+	Download the pre-built version of the OpenDaylight controller (version Helium SR2 was used):	http://www.opendaylight.org/software/downloads
+
+	-Configuration files:	
+	Proceed to the 'etc/opendaylight/karaf' folder where the configuration files are stored. To disable communication at the start disable the flag 'is-proactive-flood-mode' from the '54-arphandler.xml' configuration file and enable the flag 'is-learning-only-mode' from the 58-l2switchmain.xml' configuration file. The files are also included in the provided folder.
+	In addition, to inform OVSDB that OpenFlowv1.3 will be used go to the 'etc' folder and add or just uncomment this line 'ovsdb.ofversion = of1.3;' in the 'custom.properties' configuration file.
+
+	-Module installation and start up of the controller	:
+		Run the controller by executing the command : './karaf -of13' in the 'bin' folder to enable OpenFlow version 1.3 protocol.
+		Notes:	Wait a bit for the controller to start. It requires the Java7 version.
+		Install the modules : odl-restconf, odl-openflowplugin-flow-services-ui, odl-l2switch-switch, odl-dlux-core, odl-ovsdb-all, odl-mdsal-apidocs.
+			The complete installation command : feature:install odl-openflowplugin-flow-services-ui odl-restconf odl-l2switch-switch odl-dlux-core odl-ovsdb-all odl-mdsal-apidocs.
+			To uninstall replace 'install' for 'uninstall'.
+
+Mininet VM:
+	-Download:
+		The mininet virtual machine can be found here : https://github.com/mininet/mininet/wiki/Mininet-VM-Images
+		If you choose to download the VM instead of installing it natively you will need to configure a host-only network adaptor (w/ DHCP if you prefer).
+	-Configuration:
+		Mininet usually comes with Openvswitch version 2.0.3 installed. If that's the case you will need to uninstall that version and install the version 2.3.0 or higher.
+		In order to upgrade your OpenvSwitch version it was provided a script : 'upgradeOVS.sh'.
+		The custom topology created using Mininet's Python API is on file 'topoScenario.py' and to connect the mininet to the controller using OF13 and that topology issue the following command changing the parameters between '<>' to your parameters:
+			'sudo mn --custom topoScenario.py --topo=mytopo --controller=remote,ip=<controller IP>,port=<controller port, usually 6653> --switch=ovsk,protocol=OpenFlow13 --mac'
+		
+	-Help:
+		We will append some useful commands to deal with mininet to help you in case you need it
+
+		Start mininet (using predefined topologies): 
+		    sudo mn --controller=remote,ip=192.168.57.1,port=6653 --topo=single,2 --switch=ovsk,protocols=OpenFlow13 --mac --link tc,bw=100
+		    sudo mn --controller=remote,ip=192.168.57.1,port=6653 --topo=tree,3,2 --switch=ovsk,protocols=OpenFlow13 --mac --link tc,bw=100
+		--link defined the bandwidth for all the switches on the network using the 'tc' command. 'single,2' means there's a single switch with 2 hosts and 'tree,3,2' means that it is a tree structure with 3 levels and two hosts on the leaf switches.
+
+		OpenvSwitch commands: http://therandomsecurityguy.com/openvswitch-cheat-sheet/ - Open vSwitch Cheat Sheet.
+
+		Postman Collections used to insert, modify, remove flows, tables, queues and obtain information about interfaces, topology, among others:
+			https://www.getpostman.com/collections/428a5c20f4ce5a3cc609
+			https://www.getpostman.com/collections/214621a22a25d210e2c1
+			https://www.getpostman.com/collections/9619269b4059e617f44f
+			https://www.getpostman.com/collections/5a90bd5d1fffc54b8448
+			https://www.getpostman.com/collections/9b87f95024e9c8a3a415
+			https://www.getpostman.com/collections/c7b1c4fa535c08b56f23  
+
